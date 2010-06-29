@@ -95,7 +95,7 @@ DATE:		BY:					DESCRIPTION:
 */
 
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: 7zCommon.cpp 7169 2010-05-16 14:44:19Z jtuc $
 
 #include "stdafx.h"
 #include "OptionsDef.h"
@@ -110,12 +110,41 @@ DATE:		BY:					DESCRIPTION:
 #include <shlwapi.h>
 #include <paths.h>
 #include "Environment.h"
+#include "dllver.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+/**
+ * @brief Proxy for Merge7z
+ */
+static __declspec(thread) Merge7z::Proxy m_Merge7z =
+{
+	0, 0, DllBuild_Merge7z, 0,
+	"Merge7z%u%02u"DECORATE_U".dll",
+	"Merge7z",
+	NULL
+};
+
+BOOL IsArchiveFile(LPCTSTR pszFile)
+{
+	try {
+		Merge7z::Format *piHandler = ArchiveGuessFormat(pszFile);
+		if (piHandler)
+			return TRUE;
+		else
+			return FALSE;
+	}
+	catch (CException *e)
+	{
+		e->Delete();
+		return FALSE;
+	}
+	return FALSE;
+}
 
 /**
  * @brief Wrap Merge7z::GuessFormat() to allow for some customizing:
@@ -166,7 +195,7 @@ Merge7z::Format *ArchiveGuessFormat(LPCTSTR path)
 	}*/
 	// Default to Merge7z*.dll
 
-	return Merge7z->GuessFormat(path);
+	return m_Merge7z->GuessFormat(path);
 }
 
 /**
@@ -571,7 +600,7 @@ int NTAPI HasZipSupport()
 	{
 		try
 		{
-			Merge7z.operator->();
+			m_Merge7z.operator->();
 			HasZipSupport = 1;
 		}
 		catch (CException *e)
@@ -590,7 +619,7 @@ void NTAPI Recall7ZipMismatchError()
 {
 	try
 	{
-		Merge7z.operator->();
+		m_Merge7z.operator->();
 	}
 	catch (CException *e)
 	{
@@ -607,8 +636,8 @@ CString NTAPI GetClearTempPath(LPVOID pOwner, LPCTSTR pchExt)
 	CString strPath;
 	strPath.Format
 	(
-		pOwner ? _T("%s\\%08lX.7z%s") : _T("%s"),
-		env_GetTempPath(), pOwner, pchExt
+		pOwner ? _T("%sWINMERGE.%08lX\\%08lX.%s") : _T("%sWINMERGE.%08lX"),
+		env_GetTempPath(), GetCurrentProcessId(), pOwner, pchExt
 	);
 	// SHFileOperation expects a ZZ terminated list of paths!
 	int cchPath = strPath.GetLength();
@@ -725,20 +754,11 @@ interface Merge7z *Merge7z::Proxy::operator->()
 		{
 			flags |= Initialize::GuessFormatBySignature | Initialize::GuessFormatByExtension;
 		}
-		((interface Merge7z *)Merge7z[1])->Initialize(flags);
+		if (Merge7z[1])
+			((interface Merge7z *)Merge7z[1])->Initialize(flags);
 	}
 	return ((interface Merge7z *)Merge7z[1]);
 }
-
-/**
- * @brief Proxy for Merge7z
- */
-Merge7z::Proxy Merge7z =
-{
-	0, 0, DllBuild_Merge7z,
-	"Merge7z%u%02u"DECORATE_U".dll",
-	"Merge7z"
-};
 
 /**
  * @brief Tell Merge7z we are going to enumerate just 1 item.
@@ -807,19 +827,19 @@ CDirView::DirItemEnumerator::DirItemEnumerator(CDirView *pView, int nFlags)
 			if (m_bRight) 
 			{
 				// Enumerating items on right side
-				if (!di.diffcode.isSideLeftOnly())
+				if (!di.diffcode.isSideFirstOnly())
 				{
 					// Item is present on right side, i.e. folder is implied
-					m_rgImpliedFoldersRight[di.right.path.c_str()] = PVOID(1);
+					m_rgImpliedFoldersRight[di.diffFileInfo[1].path.c_str()] = PVOID(1);
 				}
 			}
 			else
 			{
 				// Enumerating items on left side
-				if (!di.diffcode.isSideRightOnly())
+				if (!di.diffcode.isSideSecondOnly())
 				{
 					// Item is present on left side, i.e. folder is implied
-					m_rgImpliedFoldersLeft[di.left.path.c_str()] = PVOID(1);
+					m_rgImpliedFoldersLeft[di.diffFileInfo[0].path.c_str()] = PVOID(1);
 				}
 			}
 		}
@@ -889,13 +909,13 @@ Merge7z::Envelope *CDirView::DirItemEnumerator::Enum(Item &item)
 		return 0;
 	}
 
-	bool isSideLeft = di.diffcode.isSideLeftOnly();
-	bool isSideRight = di.diffcode.isSideRightOnly();
+	bool isSideFirst = di.diffcode.isSideFirstOnly();
+	bool isSideSecond = di.diffcode.isSideSecondOnly();
 
 	Envelope *envelope = new Envelope;
 
-	const String &sFilename = m_bRight ? di.right.filename : di.left.filename;
-	const String &sSubdir = m_bRight ? di.right.path : di.left.path;
+	const String &sFilename = m_bRight ? di.diffFileInfo[1].filename : di.diffFileInfo[0].filename;
+	const String &sSubdir = m_bRight ? di.diffFileInfo[1].path : di.diffFileInfo[0].path;
 	envelope->Name = sFilename;
 	if (sSubdir.length())
 	{
@@ -905,8 +925,8 @@ Merge7z::Envelope *CDirView::DirItemEnumerator::Enum(Item &item)
 	envelope->FullPath = sFilename;
 	envelope->FullPath.insert(0, _T("\\"));
 	envelope->FullPath.insert(0, m_bRight ?
-		di.GetRightFilepath(pDoc->GetRightBasePath()) :
-		di.GetLeftFilepath(pDoc->GetLeftBasePath()));
+	di.getFilepath(1, pDoc->GetBasePath(1)) :
+	di.getFilepath(0, pDoc->GetBasePath(0)));
 
 	UINT32 Recurse = item.Mask.Recurse;
 
@@ -915,18 +935,18 @@ Merge7z::Envelope *CDirView::DirItemEnumerator::Enum(Item &item)
 		if (m_bRight)
 		{
 			// Enumerating items on right side
-			if (isSideLeft)
+			if (isSideFirst)
 			{
 				// Item is missing on right side
-				PVOID &implied = m_rgImpliedFoldersRight[di.left.path.c_str()];
+				PVOID &implied = m_rgImpliedFoldersRight[di.diffFileInfo[0].path.c_str()];
 				if (!implied)
 				{
 					// Folder is not implied by some other file, and has
 					// not been enumerated so far, so enumerate it now!
-					envelope->Name = di.left.path;
-					envelope->FullPath = di.GetLeftFilepath(pDoc->GetLeftBasePath());
+					envelope->Name = di.diffFileInfo[0].path;
+					envelope->FullPath = di.getFilepath(0, pDoc->GetBasePath(0));
 					implied = PVOID(2); // Don't enumerate same folder twice!
-					isSideLeft = false;
+					isSideFirst = false;
 					Recurse = 0;
 				}
 			}
@@ -934,25 +954,25 @@ Merge7z::Envelope *CDirView::DirItemEnumerator::Enum(Item &item)
 		else
 		{
 			// Enumerating items on left side
-			if (isSideRight)
+			if (isSideSecond)
 			{
 				// Item is missing on left side
-				PVOID &implied = m_rgImpliedFoldersLeft[di.right.path.c_str()];
+				PVOID &implied = m_rgImpliedFoldersLeft[di.diffFileInfo[1].path.c_str()];
 				if (!implied)
 				{
 					// Folder is not implied by some other file, and has
 					// not been enumerated so far, so enumerate it now!
-					envelope->Name = di.right.path;
-					envelope->FullPath = di.GetRightFilepath(pDoc->GetRightBasePath());
+					envelope->Name = di.diffFileInfo[1].path;
+					envelope->FullPath = di.getFilepath(1, pDoc->GetBasePath(1));
 					implied = PVOID(2); // Don't enumerate same folder twice!
-					isSideRight = false;
+					isSideSecond = false;
 					Recurse = 0;
 				}
 			}
 		}
 	}
 
-	if (m_bRight ? isSideLeft : isSideRight)
+	if (m_bRight ? isSideFirst : isSideSecond)
 	{
 		return envelope;
 	}
@@ -1088,8 +1108,8 @@ void CDirView::DirItemEnumerator::CompressArchive(LPCTSTR path)
 void CDirView::DirItemEnumerator::CollectFiles(CString &strBuffer)
 {
 	CDirDoc *pDoc = m_pView->GetDocument();
-	const String sLeftRootPath = pDoc->GetLeftBasePath();
-	const String sRightRootPath = pDoc->GetRightBasePath();
+	const String sLeftRootPath = pDoc->GetBasePath(0);
+	const String sRightRootPath = pDoc->GetBasePath(1);
 	UINT i;
 	int cchBuffer = 0;
 	for (i = Open() ; i-- ; )
@@ -1099,8 +1119,8 @@ void CDirView::DirItemEnumerator::CollectFiles(CString &strBuffer)
 		{
 			cchBuffer +=
 			(
-				m_bRight ? di.GetRightFilepath(sLeftRootPath) : di.GetLeftFilepath(sRightRootPath)
-			).length() + (m_bRight ? di.right.filename : di.left.filename).length() + 2;
+				m_bRight ? di.getFilepath(1, sLeftRootPath) : di.getFilepath(0, sRightRootPath)
+			).length() + (m_bRight ? di.diffFileInfo[1].filename : di.diffFileInfo[0].filename).length() + 2;
 		}
 	}
 	LPTSTR pchBuffer = strBuffer.GetBufferSetLength(cchBuffer);
@@ -1113,8 +1133,8 @@ void CDirView::DirItemEnumerator::CollectFiles(CString &strBuffer)
 			(
 				pchBuffer,
 				_T("%s\\%s"),
-				m_bRight ? di.GetRightFilepath(sLeftRootPath).c_str() : di.GetLeftFilepath(sRightRootPath).c_str(),
-				m_bRight ? di.right.filename.c_str() : di.left.filename.c_str()
+				m_bRight ? di.getFilepath(1, sLeftRootPath).c_str() : di.getFilepath(0, sRightRootPath).c_str(),
+				m_bRight ? di.diffFileInfo[1].filename.c_str() : di.diffFileInfo[0].filename.c_str()
 			) + 1;
 		}
 	}

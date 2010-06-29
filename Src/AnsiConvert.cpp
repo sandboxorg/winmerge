@@ -5,7 +5,7 @@
  *
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: AnsiConvert.cpp 7163 2010-05-15 13:20:17Z jtuc $
 
 #include <windows.h>
 

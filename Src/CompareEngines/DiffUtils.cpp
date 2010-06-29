@@ -4,16 +4,21 @@
  * @brief Implementation file for DiffUtils class.
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: DiffUtils.cpp 6932 2009-07-26 14:04:31Z kimmov $
 
 
 #include "StdAfx.h"
+#include <map>
 #include "CompareOptions.h"
 #include "FilterList.h"
 #include "DiffContext.h"
 #include "DIFF.H"
 #include "DiffUtils.h"
 #include "coretools.h"
+
+#include "DiffList.h"
+#include "DiffWrapper.h"
+#include "FilterCommentsManager.h"
 
 namespace CompareEngines
 {
@@ -26,6 +31,8 @@ DiffUtils::DiffUtils()
 		: m_pOptions(NULL)
 		, m_pFilterList(NULL)
 		, m_inf(NULL)
+		, m_FilterCommentsManager(new ::FilterCommentsManager)
+		, m_pDiffWrapper(new ::CDiffWrapper)
 {
 }
 
@@ -34,6 +41,7 @@ DiffUtils::DiffUtils()
  */
 DiffUtils::~DiffUtils()
 {
+	delete m_FilterCommentsManager;
 	ClearCompareOptions();
 	ClearFilterList();
 }
@@ -48,7 +56,8 @@ bool DiffUtils::SetCompareOptions(const CompareOptions & options)
 	if (m_pOptions != NULL)
 		ClearCompareOptions();
 
-	m_pOptions = new DiffutilsOptions(options);
+	m_pOptions = new DiffutilsOptions((DiffutilsOptions&)options);
+
 	if (m_pOptions == NULL)
 		return false;
 
@@ -118,10 +127,20 @@ int DiffUtils::diffutils_compare_files()
 	m_ndiffs = 0;
 	m_ntrivialdiffs = 0;
 
-	if (script && m_pFilterList && m_pFilterList->HasRegExps())
+	if (script)
 	{
 		struct change *next = script;
 		struct change *thisob = 0, *end = 0;
+
+		String asLwrCaseExt;
+		String LowerCaseExt = CA2T(m_inf[0].name);
+		int PosOfDot = LowerCaseExt.rfind('.');
+		if (PosOfDot != -1)
+		{
+			LowerCaseExt.erase(0, PosOfDot + 1);
+			CharLower(&*LowerCaseExt.begin());
+			asLwrCaseExt = LowerCaseExt;
+		}
 
 		while (next)
 		{
@@ -140,7 +159,7 @@ int DiffUtils::diffutils_compare_files()
 			{
 				/* Determine range of line numbers involved in each file.  */
 				int first0 = 0, last0 = 0, first1 = 0, last1 = 0, deletes = 0, inserts = 0;
-				analyze_hunk(thisob, &first0, &last0, &first1, &last1, &deletes, &inserts);
+				analyze_hunk (thisob, &first0, &last0, &first1, &last1, &deletes, &inserts, m_inf);
 				if (deletes || inserts || thisob->trivial)
 				{
 					/* Print the lines that the first file has.  */
@@ -152,15 +171,40 @@ int DiffUtils::diffutils_compare_files()
 					int QtyLinesLeft = (trans_b0 - trans_a0);
 					int QtyLinesRight = (trans_b1 - trans_a1);
 
+					if(m_pOptions->m_filterCommentsLines)
+					{
+						int op=0;
+						if (!deletes && !inserts)
+							op = OP_TRIVIAL;
+						else
+							op = OP_DIFF;
+
+						DIFFOPTIONS options = {0};
+						options.nIgnoreWhitespace = m_pOptions->m_ignoreWhitespace;
+						options.bIgnoreBlankLines = m_pOptions->m_bIgnoreBlankLines;
+						options.bFilterCommentsLines = m_pOptions->m_filterCommentsLines;
+						options.bIgnoreCase = m_pOptions->m_bIgnoreCase;
+						options.bIgnoreEol = m_pOptions->m_bIgnoreEOLDifference;
+						m_pDiffWrapper->SetOptions(&options);
+  						m_pDiffWrapper->PostFilter(thisob->line0, QtyLinesLeft+1, thisob->line1, QtyLinesRight+1, op, *m_FilterCommentsManager, asLwrCaseExt.c_str());
+						if(op == OP_TRIVIAL)
+						{
+							thisob->trivial = 1;
+						}
+					}
+
 					// Match lines against regular expression filters
 					// Our strategy is that every line in both sides must
 					// match regexp before we mark difference as ignored.
-					bool match2 = false;
-					bool match1 = RegExpFilter(thisob->line0, thisob->line0 + QtyLinesLeft, 0);
-					if (match1)
-						match2 = RegExpFilter(thisob->line1, thisob->line1 + QtyLinesRight, 1);
-					if (match1 && match2)
-						thisob->trivial = 1;
+					if(m_pFilterList && m_pFilterList->HasRegExps())
+					{
+						bool match2 = false;
+						bool match1 = RegExpFilter(thisob->line0, thisob->line0 + QtyLinesLeft, 0);
+						if (match1)
+							match2 = RegExpFilter(thisob->line1, thisob->line1 + QtyLinesRight, 1);
+						if (match1 && match2)
+							thisob->trivial = 1;
+					}
 
 				}
 				/* Reconnect the script so it will all be freed properly.  */
@@ -246,8 +290,9 @@ bool DiffUtils::RegExpFilter(int StartPos, int EndPos, int FileNo)
 
 	while (line <= EndPos && linesMatch == true)
 	{
+		size_t len = files[FileNo].linbuf[line + 1] - files[FileNo].linbuf[line];
 		const char *string = files[FileNo].linbuf[line];
-		size_t stringlen = linelen(string);
+		size_t stringlen = linelen(string, len);
 		if (!m_pFilterList->Match(stringlen, string, m_codepage))
 		{
 			linesMatch = false;

@@ -4,7 +4,7 @@
  * @brief Implementation file for TimeSizeCompare
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: TimeSizeCompare.cpp 7153 2010-05-04 18:11:48Z kimmov $
 
 #include "stdafx.h"
 #include "DiffItem.h"
@@ -45,9 +45,9 @@ int TimeSizeCompare::CompareFiles(int compMethod, const DIFFITEM &di)
 	{
 		// Compare by modified date
 		// Check that we have both filetimes
-		if (di.left.mtime != 0 && di.right.mtime != 0)
+		if (di.diffFileInfo[0].mtime != 0 && di.diffFileInfo[1].mtime != 0)
 		{
-			INT64 nTimeDiff =_abs64(di.left.mtime - di.right.mtime);
+			INT64 nTimeDiff =_abs64( di.diffFileInfo[0].mtime - di.diffFileInfo[1].mtime);
 			if (m_ignoreSmallDiff)
 			{
 				// If option to ignore small timediffs (couple of seconds)
@@ -74,7 +74,7 @@ int TimeSizeCompare::CompareFiles(int compMethod, const DIFFITEM &di)
 	// If file sizes differ mark them different
 	if ((compMethod == CMP_DATE_SIZE) || (compMethod == CMP_SIZE))
 	{
-		if (di.left.size != di.right.size)
+		if (di.diffFileInfo[0].size != di.diffFileInfo[1].size)
 		{
 			code &= ~DIFFCODE::SAME;
 			code = DIFFCODE::DIFF;

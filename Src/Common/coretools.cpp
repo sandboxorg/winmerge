@@ -5,7 +5,7 @@
  *
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: coretools.cpp 7168 2010-05-16 13:45:23Z jtuc $
 
 #include <windows.h>
 #include <tchar.h>
@@ -91,12 +91,13 @@ int tcssubptr(LPCTSTR start, LPCTSTR end)
 	return cnt;
 }
 
-size_t linelen(const char *string)
+size_t linelen(const char *string, size_t maxlen)
 {
 	size_t stringlen = 0;
-	while (char c = string[stringlen])
+	while (stringlen < maxlen)
 	{
-		if (c == '\r' || c == '\n')
+		char c = string[stringlen];
+		if (c == '\r' || c == '\n' || c == '\0')
 			break;
 		++stringlen;
 	}
@@ -553,7 +554,10 @@ HANDLE RunIt(LPCTSTR szExeFile, LPCTSTR szArgs, BOOL bMinimized /*= TRUE*/, BOOL
     si.wShowWindow = (bMinimized) ? SW_MINIMIZE : SW_HIDE;
 
 	TCHAR args[4096];
-	_sntprintf(args, countof(args), _T("\"%s\" %s"), szExeFile, szArgs);
+	if (szExeFile)
+		_sntprintf(args, countof(args), _T("\"%s\" %s"), szExeFile, szArgs);
+	else
+		_sntprintf(args, countof(args), _T("%s"), szArgs);
     if (CreateProcess(szExeFile, args, NULL, NULL,
 		FALSE, NORMAL_PRIORITY_CLASS|(bNewConsole? CREATE_NEW_CONSOLE:0),
                          NULL, _T(".\\"), &si, &procInfo))
