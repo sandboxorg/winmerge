@@ -24,10 +24,11 @@
  *  @brief Support for VBS Scriptlets, VB ActiveX DLL, VC++ COM DLL
  */ 
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: Plugins.cpp 7052 2009-12-22 17:45:22Z kimmov $
 
 #include "StdAfx.h"
 #include <afxmt.h>
+#include <stdarg.h>
 #include <vector>
 
 #include "pcre.h"
@@ -287,7 +288,11 @@ void PluginInfo::LoadFilterString()
 		const char * errormsg = NULL;
 		int erroroffset = 0;
 		char *regexString = UCS2UTF8_ConvertToUtf8(sPiece);
-		pcre *regexp = pcre_compile(regexString, 0, &errormsg, &erroroffset, NULL);
+		int pcre_opts = 0;
+#ifdef UNICODE
+		pcre_opts |= PCRE_UTF8;
+#endif
+		pcre *regexp = pcre_compile(regexString, pcre_opts, &errormsg, &erroroffset, NULL);
 		if (regexp)
 		{
 			FileFilterElement *elem = new FileFilterElement();
@@ -307,13 +312,12 @@ BOOL PluginInfo::TestAgainstRegList(LPCTSTR szTest)
 	CString sLine = szTest;
 	CString sPiece;
 
-	while(1)
+	while(!sLine.IsEmpty())
 	{
 		sPiece = sLine.Mid(sLine.ReverseFind('|')+1);
 		sLine = sLine.Left(sLine.ReverseFind('|'));
 		if (sPiece.IsEmpty())
-			break;
-
+			continue;
 		sPiece.TrimLeft();
 		sPiece.MakeUpper();
 
@@ -963,11 +967,24 @@ static HRESULT safeInvokeA(LPDISPATCH pi, VARIANT *ret, DISPID id, LPCCH op, ...
 	HRESULT h;
 	SE_Handler seh;
 	TCHAR errorText[500];
-	BOOL bExceptionCatched = FALSE;
-	
+	BOOL bExceptionCatched = FALSE;	
+#ifdef WIN64
+	int nargs = LOBYTE((UINT_PTR)op);
+	VARIANT *pargs = new VARIANT[nargs];
+	va_list list;
+	va_start(list, op);
+	for (int i = 0; i < nargs; i++)
+		pargs[i] = va_arg(list, VARIANT);
+	va_end(list);
+#endif
+
 	try 
 	{
-		h = invokeA(pi, ret, id, op, (VARIANT*)(&op+1));
+#ifdef WIN64
+		h = invokeA(pi, ret, id, op, pargs);
+#else
+		h = invokeA(pi, ret, id, op, (VARIANT *)(&op + 1));
+#endif
 	}
 	catch(CException * e) 
 	{
@@ -992,6 +1009,9 @@ static HRESULT safeInvokeA(LPDISPATCH pi, VARIANT *ret, DISPID id, LPCCH op, ...
 		h = -1;
 	}
 
+#ifdef WIN64
+	delete [] pargs;
+#endif
 	return h;
 }
 /**
@@ -1005,10 +1025,23 @@ static HRESULT safeInvokeW(LPDISPATCH pi, VARIANT *ret, BSTR silent, LPCCH op, .
 	SE_Handler seh;
 	TCHAR errorText[500];
 	BOOL bExceptionCatched = FALSE;
+#ifdef WIN64
+	int nargs = LOBYTE((UINT_PTR)op);
+	VARIANT *pargs = new VARIANT[nargs];
+	va_list list;
+	va_start(list, op);
+	for (int i = 0; i < nargs; i++)
+		pargs[i] = va_arg(list, VARIANT);
+	va_end(list);
+#endif
 	
 	try 
 	{
-		h = invokeW(pi, ret, silent, op, (VARIANT*)(&op+1));
+#ifdef WIN64
+		h = invokeW(pi, ret, silent, op, pargs);
+#else
+		h = invokeW(pi, ret, silent, op, (VARIANT *)(&op + 1));
+#endif
 	}
 	catch(CException * e) 
 	{
@@ -1032,6 +1065,10 @@ static HRESULT safeInvokeW(LPDISPATCH pi, VARIANT *ret, BSTR silent, LPCCH op, .
 		// set h to FAILED
 		h = -1;
 	}
+
+#ifdef WIN64
+	delete [] pargs;
+#endif
 
 	return h;
 }

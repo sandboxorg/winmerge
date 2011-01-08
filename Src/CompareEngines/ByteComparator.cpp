@@ -4,7 +4,7 @@
  * @brief Implements ByteComparator class.
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: ByteComparator.cpp 7090 2010-01-11 19:48:26Z kimmov $
 
 //#include "StdAfx.h"
 #include <windows.h>

@@ -4,7 +4,7 @@
  * @brief Implementation file for DiffUtils class.
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: DiffUtils.cpp 6932 2009-07-26 14:04:31Z kimmov $
 
 
 #include "StdAfx.h"
@@ -158,7 +158,7 @@ int DiffUtils::diffutils_compare_files()
 			{
 				/* Determine range of line numbers involved in each file.  */
 				int first0 = 0, last0 = 0, first1 = 0, last1 = 0, deletes = 0, inserts = 0;
-				analyze_hunk(thisob, &first0, &last0, &first1, &last1, &deletes, &inserts);
+				analyze_hunk (thisob, &first0, &last0, &first1, &last1, &deletes, &inserts, m_inf);
 				if (deletes || inserts || thisob->trivial)
 				{
 					/* Print the lines that the first file has.  */
@@ -170,8 +170,7 @@ int DiffUtils::diffutils_compare_files()
 					int QtyLinesLeft = (trans_b0 - trans_a0);
 					int QtyLinesRight = (trans_b1 - trans_a1);
 
-
-					if(m_pOptions->m_filterCommentsLines || m_pOptions->m_bIgnoreBlankLines || m_pOptions->m_bIgnoreCase)
+					if(m_pOptions->m_filterCommentsLines)
 					{
 						OP_TYPE op = OP_NONE;
 						if (!deletes && !inserts)
@@ -290,8 +289,9 @@ bool DiffUtils::RegExpFilter(int StartPos, int EndPos, int FileNo)
 
 	while (line <= EndPos && linesMatch == true)
 	{
+		size_t len = files[FileNo].linbuf[line + 1] - files[FileNo].linbuf[line];
 		const char *string = files[FileNo].linbuf[line];
-		size_t stringlen = linelen(string);
+		size_t stringlen = linelen(string, len);
 		if (!m_pFilterList->Match(stringlen, string, m_codepage))
 		{
 			linesMatch = false;

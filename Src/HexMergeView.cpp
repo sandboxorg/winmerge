@@ -25,7 +25,7 @@
  *
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: HexMergeView.cpp 7165 2010-05-15 14:04:43Z jtuc $
 
 #include "stdafx.h"
 #include "Merge.h"

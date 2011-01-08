@@ -23,7 +23,7 @@
  * @brief Declaration of CHexMergeDoc class
  */
 // RCS ID line follows -- this is updated by CVS
-// $Id$
+// $Id: HexMergeDoc.h 7166 2010-05-16 12:05:13Z jtuc $
 
 #include "PathContext.h"
 #include "DiffFileInfo.h"
@@ -39,6 +39,8 @@ class CHexMergeDoc : public CDocument
 {
 // Attributes
 public:
+	static int m_nBuffersTemp;
+	int m_nBuffers;
 	PathContext m_filePaths; /**< Filepaths for this document */
 
 // Begin declaration of CHexMergeDoc
@@ -50,7 +52,7 @@ protected: // create from serialization only
 	
 	// Operations
 public:	
-	void SetMergeViews(CHexMergeView * pLeft, CHexMergeView * pRight);
+	void SetMergeViews(CHexMergeView * pView[]);
 
 	// Overrides
 	// ClassWizard generated virtual function overrides
@@ -70,28 +72,33 @@ public:
 	BOOL CloseNow();
 	CHexMergeFrame * GetParentFrame();
 	void UpdateHeaderPath(int pane);
-	HRESULT OpenDocs(LPCTSTR pathLeft, LPCTSTR pathRight, BOOL bROLeft, BOOL bRORight);
+	HRESULT OpenDocs(const PathContext &paths, BOOL bRO[]);
 private:
 	static void CopySel(CHexMergeView *pViewSrc, CHexMergeView *pViewDst);
 	static void CopyAll(CHexMergeView *pViewSrc, CHexMergeView *pViewDst);
+	void DoFileSave(int nBuffer);
+	void DoFileSaveAs(int nBuffer);
 	HRESULT LoadOneFile(int index, LPCTSTR filename, BOOL readOnly);
 // Implementation data
 protected:
-	CHexMergeView * m_pView[MERGE_VIEW_COUNT]; /**< Pointer to left/right view */
+	CHexMergeView * m_pView[3]; /**< Pointer to left/right view */
 	CDirDoc * m_pDirDoc;
-	String m_strDesc[2]; /**< Left/right side description text */
-	BUFFERTYPE m_nBufferType[2];
+	String m_strDesc[3]; /**< Left/right side description text */
+	BUFFERTYPE m_nBufferType[3];
 
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CMergeDoc)
 	afx_msg void OnFileSave();
 	afx_msg void OnFileSaveLeft();
+	afx_msg void OnFileSaveMiddle();
 	afx_msg void OnFileSaveRight();
 	afx_msg void OnFileSaveAsLeft();
+	afx_msg void OnFileSaveAsMiddle();
 	afx_msg void OnFileSaveAsRight();
 	afx_msg void OnUpdateStatusNum(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFileSaveLeft(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateFileSaveMiddle(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFileSaveRight(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
 	afx_msg void OnL2r();

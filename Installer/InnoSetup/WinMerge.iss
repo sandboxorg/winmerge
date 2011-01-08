@@ -1,5 +1,5 @@
 ; ID line follows -- this is updated by SVN
-; $Id$
+; $Id: WinMerge.iss 7150 2010-05-04 17:26:43Z kimmov $
 ;
 ;           Programmed by:  Christian Blackburn, Christian List, Kimmo Varis,
 ;                 Purpose:  The is the Inno Setup installation script for distributing our WinMerge application.
@@ -19,11 +19,18 @@
 ;                           5.  The compiled installer will appear in the \InnoSetup\Output\ directory at currently should be around 1.5MBs in size.
 ;
 ; Installer To Do List:
+; #  Make the Install7ZipDll() Function automatically work with future versions of Merge7zDLL (Use GetCurentFileName)
+; #  Provide the option to or not to assign the Ctrl+Alt+M accelerator to WinMerge., make sure it's turned on for at least one icon
+; #  Add WinMerge to the user's path so they can execute comparison's from a Dos Prompt (Cmd.exe/Command.exe)
 ; #  We need to unregister, and delete the ShellExtension Dll if the user doesn't want it, during installation
 
 ; #  Display integration options in gray rather than hiding them if the user doesn't have the application in question installed
 ; #  We need to ask those that have the RCLLocalization.dll in their plugins folder if they actually want it, their answer will need to be stored in the registry
 ; #  Write code to detect "\Programs\WinMerge\WinMerge" type start menu installs
+;
+; Custom Installer Pages:
+; #  Bundle 7-Zip with WinMerge or provide on the fly download capability.
+; #  Allow users to set their working directory via a custom installer page
 ;
 ; Things that make the user's life easier:
 ; #  Create instructions and a sample language file using the Inno Setup Translator Tool (http://www2.arnes.si/~sopjsimo/translator.html)
@@ -48,36 +55,6 @@
 #define AppVersion GetFileVersion(SourcePath + "\..\..\Build\MergeUnicodeRelease\WinMergeU.exe")
 #define FriendlyAppVersion Copy(GetFileVersion(SourcePath + "\..\..\Build\MergeUnicodeRelease\WinMergeU.exe"), 1, 5)
 
-; Runtime files installers
-#define RuntimesX86Installer "..\..\..\Runtimes\vcredist_x86.exe"
-#define RuntimesX64Installer "..\..\..\Runtimes\vcredist_x64.exe"
-
-; OpenCandy includes and defines
-#include <OCSetupHlp.iss>
-
-// The OpenCandyKeys.iss file contains the WinMerge specific OpenCandy keys.
-// The file can be obtained from the WinMerge administrators.
-// Remove the next line to use the demo keys only.
-#include <OpenCandyKeys.iss>
-
-#define OC_STR_MY_PRODUCT_NAME "WinMerge"
-
-// Note: These keys are demo keys only, the WinMerge keys are kept somewhere else
-#ifndef OC_STR_KEY
-  #define OC_STR_KEY "1401d0bd8048e1f0f4628dbec1a73092"
-#endif
-#ifndef OC_STR_SECRET
-  #define OC_STR_SECRET "4564bdaf826bbe2115718d1643ecc19e"
-#endif
-
-#define OC_STR_REGISTRY_PATH "Software\Thingamahoochie\OpenCandy"
-
-#if OC_STR_KEY == "1401d0bd8048e1f0f4628dbec1a73092"
-	#pragma warning "Do not forget to change the test key '1401d0bd8048e1f0f4628dbec1a73092' to your company's product key before releasing this installer."
-#endif
-#if OC_STR_SECRET == "4564bdaf826bbe2115718d1643ecc19e"
-	#pragma warning "Do not forget to change the test secret '4564bdaf826bbe2115718d1643ecc19e' to your company's product secret before releasing this installer."
-#endif
 
 [Setup]
 AppName=WinMerge
@@ -181,7 +158,7 @@ Name: Ukrainian; MessagesFile: ..\..\Translations\InnoSetup\Ukrainian.isl; InfoA
 English.FinishedLabel=Setup has finished installing WinMerge on your computer.
 English.SetupAppTitle=Setup - WinMerge {#AppVersion}
 English.WizardInfoBefore=License Agreement
-English.InfoBeforeLabel=GNU General Public License & OpenCandy EULA
+English.InfoBeforeLabel=GNU General Public License
 
 
 [Types]
@@ -315,6 +292,36 @@ Name: {app}\WinMergeU.exe; Type: files; MinVersion: 0, 4
 Name: {app}\WinMerge.exe.manifest; Type: files
 Name: {app}\WinMergeU.exe.manifest; Type: files
 
+Name: {app}\Merge7z311.dll; Type: files
+Name: {app}\Merge7z311U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z312.dll; Type: files
+Name: {app}\Merge7z312U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z313.dll; Type: files
+Name: {app}\Merge7z313U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z420.dll; Type: files
+Name: {app}\Merge7z420U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z423.dll; Type: files
+Name: {app}\Merge7z423U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z431.dll; Type: files
+Name: {app}\Merge7z431U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z432.dll; Type: files
+Name: {app}\Merge7z432U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z442.dll; Type: files
+Name: {app}\Merge7z442U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z457.dll; Type: files
+Name: {app}\Merge7z457U.dll; Type: files; MinVersion: 0, 4
+
+Name: {app}\Merge7z465.dll; Type: files
+Name: {app}\Merge7z465U.dll; Type: files; MinVersion: 0, 4
+
 ;This won't work, because the file has to be unregistered, and explorer closed, first.
 ;Name: {app}\ShellExtension.dll; Type: files; Check: TaskDisabled('ShellExtension')
 
@@ -354,6 +361,7 @@ Name: {userappdata}\Microsoft\Internet Explorer\Quick Launch\WinMerge.lnk; Type:
 Name: {commonappdata}\Microsoft\Internet Explorer\Quick Launch\WinMerge.lnk; Type: files; Check: not IsTaskSelected('QuickLauchIcon')
 
 ;This removes the desktop icon in case the user chooses not to install it after previously having it installed
+Name: {userdesktop}\WinMerge.lnk; Type: files; Check: not IsTaskSelected('DesktopIcon')
 Name: {commondesktop}\WinMerge.lnk; Type: files; Check: not IsTaskSelected('DesktopIcon')
 
 ;Removes the Uninstall icon from the start menu...
@@ -396,23 +404,39 @@ Source: ..\..\Build\MergeUnicodeRelease\WinMergeU.exe; DestDir: {app}; Flags: pr
 ; List of installed files
 Source: ..\..\Docs\Users\Files.txt; DestDir: {app}; Flags: promptifolder; Components: Core
 
-; Microsoft runtime libraries installer (C-runtimes, MFC)
-Source: {#RuntimesX86Installer}; DestDir: {tmp}; Flags: ignoreversion; Components: Core; AfterInstall: RuntimesInstaller
-Source: {#RuntimesX64Installer}; DestDir: {tmp}; Flags: ignoreversion; Components: Core; Check: IsWin64; AfterInstall: RuntimesX64Installer
+; Microsoft runtime libraries (C-runtime, MFC)
+Source: "C:\Program Files (x86)\Microsoft Visual Studio 10.0\vc\redist\x86\Microsoft.VC100.CRT\msvcr100.dll"; DestDir: "{app}"; Components: Core
+Source: "C:\Program Files (x86)\Microsoft Visual Studio 10.0\vc\redist\x86\Microsoft.VC100.CRT\msvcp100.dll"; DestDir: "{app}"; Components: Core
+
+Source: "C:\Program Files (x86)\Microsoft Visual Studio 10.0\vc\redist\x86\Microsoft.VC100.MFC\mfc100u.dll"; DestDir: "{app}"; Components: Core
+Source: "C:\Program Files (x86)\Microsoft Visual Studio 10.0\vc\redist\x86\Microsoft.VC100.MFC\mfcm100u.dll"; DestDir: "{app}"; Components: Core
+Source: "C:\Program Files (x86)\Microsoft Visual Studio 10.0\vc\redist\x86\Microsoft.VC100.MFCLOC\mfc100jpn.dll"; DestDir: "{app}"; Components: Core
 
 ; Shell extension
-Source: ..\..\Build\ShellExtension\unicode release mindependency\ShellExtensionU.dll; DestDir: {app}; Flags: regserver uninsrestartdelete restartreplace promptifolder; Check: not IsWin64
+Source: ..\..\Build\ShellExtensionUnicode Release MinDependency\ShellExtensionU.dll; DestDir: {app}; Flags: regserver uninsrestartdelete restartreplace promptifolder; MinVersion: 0, 4; Check: not IsWin64
 ; 64-bit version of ShellExtension
-Source: ..\..\Build\ShellExtension\x64 release\ShellExtensionX64.dll; DestDir: {app}; Flags: regserver uninsrestartdelete restartreplace promptifolder 64bit; MinVersion: 0,5.01.2600; Check: IsWin64
+Source: ..\..\Build\X64\ShellExtensionUnicode Release MinDependency\ShellExtensionX64.dll; DestDir: {app}; Flags: regserver uninsrestartdelete restartreplace promptifolder 64bit; MinVersion: 0,5.01.2600; Check: IsWin64
+
+;Please do not reorder the 7z Dlls by version they compress better ordered by platform and then by version
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z465U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('465')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z457U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('457')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z442U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('442')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z432U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('432')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z431U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('431')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z423U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('423')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z420U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('420')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z313U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('313')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z312U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('312')
+Source: ..\..\Build\MergeUnicodeRelease\Merge7z311U.dll; DestDir: {app}; Flags: promptifolder; MinVersion: 0, 4; Check: Install7ZipDll('311')
 
 ; Expat dll
-Source: ..\..\Build\expat\libexpat.dll; DestDir: {app}; Flags: promptifolder; Components: Core
+Source: ..\..\Build\expat\lib\Release\libexpat.dll; DestDir: {app}; Flags: promptifolder; Components: Core
 
 ; PCRE dll
-Source: ..\..\Build\pcre\pcre.dll; DestDir: {app}; Flags: promptifolder; Components: Core
+Source: ..\..\Build\pcre\MinSizeRel\pcre.dll; DestDir: {app}; Flags: promptifolder; Components: Core
 
 ; MergeLang.dll - translation helper dll
-Source: ..\..\Build\MergeUnicodeRelease\MergeLang.dll; DestDir: {app}; Flags: promptifolder; Components: Core
+Source: ..\..\Build\MergeUnicodeRelease\MergeLang.dll; DestDir: {app}; Flags: promptifolder ignoreversion; Components: Core
 
 ; Language files
 Source: ..\..\Translations\WinMerge\Brazilian.po; DestDir: {app}\Languages; Components: Languages\PortugueseBrazilian; Flags: ignoreversion comparetimestamp
@@ -441,7 +465,8 @@ Source: ..\..\Translations\Docs\Readme\ReadMe-Greek.txt; DestDir: {app}\Docs; Co
 Source: ..\..\Translations\WinMerge\Hungarian.po; DestDir: {app}\Languages; Components: Languages\Hungarian; Flags: ignoreversion comparetimestamp
 Source: ..\..\Translations\WinMerge\Italian.po; DestDir: {app}\Languages; Components: Languages\Italian; Flags: ignoreversion comparetimestamp
 Source: ..\..\Translations\WinMerge\Japanese.po; DestDir: {app}\Languages; Components: Languages\Japanese; Flags: ignoreversion comparetimestamp
-Source: ..\..\Translations\Docs\Readme\ReadMe-Japanese.txt; DestDir: {app}\Docs; Components: Languages\Japanese
+Source: ..\..\Build\Docs\ReadMe-Japanese.txt; DestDir: {app}\Docs; Components: Languages\Japanese
+Source: ..\..\Build\Manual\htmlhelp\WinMerge_ja.chm; DestDir: {app}\Docs; Components: Languages\Japanese
 Source: ..\..\Translations\WinMerge\Korean.po; DestDir: {app}\Languages; Components: Languages\Korean; Flags: ignoreversion comparetimestamp
 Source: ..\..\Translations\WinMerge\Norwegian.po; DestDir: {app}\Languages; Components: Languages\Norwegian; Flags: ignoreversion comparetimestamp
 Source: ..\..\Translations\WinMerge\Persian.po; DestDir: {app}\Languages; Components: Languages\Persian; Flags: ignoreversion comparetimestamp
@@ -462,31 +487,34 @@ Source: ..\..\Translations\WinMerge\Turkish.po; DestDir: {app}\Languages; Compon
 Source: ..\..\Translations\WinMerge\Ukrainian.po; DestDir: {app}\Languages; Components: Languages\Ukrainian; Flags: ignoreversion comparetimestamp
 Source: ..\..\Translations\Docs\Readme\ReadMe-Ukrainian.txt; DestDir: {app}\Docs; Components: Languages\Ukrainian
 
-Source: ..\..\Filters\*.flt; DestDir: {app}\Filters; Flags: sortfilesbyextension comparetimestamp ignoreversion; Components: filters
-Source: ..\..\Filters\FileFilter.tmpl; DestDir: {app}\Filters; Flags: sortfilesbyextension comparetimestamp ignoreversion; Components: filters
+Source: ..\..\Build\Filters\*.flt; DestDir: {app}\Filters; Flags: sortfilesbyextension comparetimestamp ignoreversion; Components: filters
+Source: ..\..\Build\Filters\FileFilter.tmpl; DestDir: {app}\Filters; Flags: sortfilesbyextension comparetimestamp ignoreversion; Components: filters
 
 ;Documentation
-Source: ..\..\Docs\Users\ReadMe.txt; DestDir: {app}\Docs; Flags: comparetimestamp ignoreversion promptifolder; Components: Core
-Source: ..\..\Docs\Users\Contributors.txt; DestDir: {app}; Flags: comparetimestamp ignoreversion promptifolder; Components: Core
+Source: ..\..\Build\Docs\ReadMe.txt; DestDir: {app}\Docs; Flags: comparetimestamp ignoreversion promptifolder; Components: Core
+Source: ..\..\Build\Docs\Contributors.txt; DestDir: {app}; Flags: comparetimestamp ignoreversion promptifolder; Components: Core
 Source: ..\..\Docs\Users\ReleaseNotes.html; DestDir: {app}\Docs; Flags: comparetimestamp ignoreversion promptifolder; Components: Core
-Source: ..\..\Docs\Users\ChangeLog.txt; DestDir: {app}\Docs; Flags: comparetimestamp ignoreversion promptifolder; Components: Core
+Source: ..\..\Build\Docs\ChangeLog.txt; DestDir: {app}\Docs; Flags: comparetimestamp ignoreversion promptifolder; Components: Core
 Source: ..\..\Build\Manual\htmlhelp\WinMerge.chm; DestDir: {app}\Docs\; Flags: overwritereadonly uninsremovereadonly; Components: Core
 
 ;Plugins
 ;Please note IgnoreVersion and CompareTimeStamp are to instruct the installer to not not check for version info and go straight to comparing modification dates
 Source: ..\..\Plugins\dlls\editor addin.sct; DestDir: {app}\MergePlugins; Flags: IgnoreVersion CompareTimeStamp; Components: Plugins
 Source: ..\..\Plugins\dlls\insert datetime.sct; DestDir: {app}\MergePlugins; Flags: IgnoreVersion CompareTimeStamp; Components: Plugins
-
-; OPEN CANDY START
-Source: {#OCREADME}; DestDir: {app}\OpenCandy; Flags: overwritereadonly ignoreversion;  Check: OpenCandyCheckInstallReadme
-Source: {#OCDLL}; DestDir: {app}\OpenCandy; Flags: overwritereadonly ignoreversion; Check: OpenCandyCheckInstallDLL; AfterInstall: OpenCandyProcessEmbedded
-; OPEN CANDY END
+Source: ..\..\Plugins\dlls\CompareMSExcelFiles.dll; DestDir: {app}\MergePlugins; Flags: promptifolder; Components: Plugins
+Source: ..\..\Plugins\dlls\CompareMSWordFiles.dll; DestDir: {app}\MergePlugins; Flags: promptifolder; Components: Plugins
+Source: ..\..\Plugins\dlls\IgnoreColumns.dll; DestDir: {app}\MergePlugins; Flags: promptifolder; Components: Plugins
+Source: ..\..\Plugins\dlls\IgnoreCommentsC.dll; DestDir: {app}\MergePlugins; Flags: promptifolder; Components: Plugins
+Source: ..\..\Plugins\dlls\IgnoreFieldsComma.dll; DestDir: {app}\MergePlugins; Flags: promptifolder; Components: Plugins
+Source: ..\..\Plugins\dlls\IgnoreFieldsTab.dll; DestDir: {app}\MergePlugins; Flags: promptifolder; Components: Plugins
+Source: ..\..\Plugins\dlls\IgnoreLeadingLineNumbers.dll; DestDir: {app}\MergePlugins; Flags: promptifolder; Components: Plugins
 
 [Icons]
 ;Start Menu Icons
 Name: {group}\WinMerge; Filename: {app}\{code:ExeName}
 Name: {group}\{cm:ReadMe}; Filename: {app}\Docs\ReadMe.txt; IconFileName: {win}\NOTEPAD.EXE
 Name: {group}\{cm:UsersGuide}; Filename: {app}\Docs\WinMerge.chm
+Name: {group}\{cm:UninstallProgram,WinMerge}; Filename: {uninstallexe}
 Name: {group}\{cm:ProgramOnTheWeb,WinMerge}; Filename: http://winmerge.org/
 
 ;Link to translated ReadMe in Start Menu
@@ -542,7 +570,6 @@ Root: HKCR; SubKey: Directory\Shell\WinMerge\command; ValueType: none; Flags: de
 Root: HKCR; SubKey: Directory\Shell\WinMerge; ValueType: none; Flags: deletekey noerror
 
 ;Adds "Start Menu" --> "Run" Support for WinMerge
-;TODO: Deinstall WinMerge.exe paths?
 Root: HKLM; Subkey: Software\Microsoft\Windows\CurrentVersion\App Paths\WinMerge.exe; ValueType: none; Flags: uninsdeletekey
 Root: HKLM; Subkey: Software\Microsoft\Windows\CurrentVersion\App Paths\WinMergeU.exe; ValueType: none; Flags: uninsdeletekey
 Root: HKLM; SubKey: SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\WinMerge.exe; ValueType: string; ValueName: ; ValueData: {app}\{code:ExeName}
@@ -553,10 +580,11 @@ Root: HKLM; SubKey: Software\Thingamahoochie\WinMerge; ValueType: string; ValueN
 
 ;Enables or disables the Context Menu preference based on what the user selects during install
 ;Initially the Context menu is explicitly disabled:
-Root: HKLM; SubKey: Software\Thingamahoochie\WinMerge; ValueType: dword; ValueName: ContextMenuEnabled; ValueData: 0; Check: not IsTaskSelected('ShellExtension')
+Root: HKLM; SubKey: Software\Thingamahoochie\WinMerge; ValueType: dword; ValueName: ContextMenuEnabled; ValueData: 0;
 
 ;If the user chose to use the context menu then we re-enable it.  This is necessary so it'll turn on and off not just on.
-Root: HKLM; SubKey: Software\Thingamahoochie\WinMerge; ValueType: dword; ValueName: ContextMenuEnabled; ValueData: 1; Tasks: ShellExtension; Check: not ShellMenuEnabled()
+Root: HKLM; SubKey: Software\Thingamahoochie\WinMerge; ValueType: dword; ValueName: ContextMenuEnabled; ValueData: 1; Tasks: ShellExtension
+Root: HKCU; SubKey: Software\Thingamahoochie\WinMerge; ValueType: dword; ValueName: ContextMenuEnabled; ValueData: {code:ShellMenuEnabled}
 
 ;If WinMerge.exe is installed then we'll automatically configure WinMerge as the differencing application
 Root: HKCU; SubKey: Software\TortoiseCVS; ValueType: string; ValueName: External Diff Application; ValueData: {app}\{code:ExeName}; Flags: uninsdeletevalue; Tasks: TortoiseCVS
@@ -626,28 +654,12 @@ Name: {app}; Type: dirifempty
 
 
 [Code]
+Var
+    {Stores the version of 7-Zip Installed}
+    int7Zip_Version: Integer;
 
-{Runs the runtime file installer}
-{Command line used is documented in:
-http://blogs.msdn.com/astebner/archive/2007/02/07/update-regarding-silent-install-of-the-vc-8-0-runtime-vcredist-packages.aspx
-}
-procedure RuntimesInstaller();
-var
-    ResultCode: Integer;
-begin
-    Exec(ExpandConstant('{tmp}\vcredist_x86.exe'), '/q:a /c:"VCREDI~3.EXE /q:a /c:""msiexec /i vcredist.msi /qn"" "', '', SW_SHOW, ewWaitUntilTerminated, ResultCode)
-end;
-
-{Runs the runtime file installer for X64}
-{Command line used is documented in:
-http://blogs.msdn.com/astebner/archive/2007/02/07/update-regarding-silent-install-of-the-vc-8-0-runtime-vcredist-packages.aspx
-}
-procedure RuntimesX64Installer();
-var
-    ResultCode: Integer;
-begin
-    Exec(ExpandConstant('{tmp}\vcredist_x64.exe'), '/q:a /c:"VCREDI~2.EXE /q:a /c:""msiexec /i vcredist.msi /qn"" "', '', SW_SHOW, ewWaitUntilTerminated, ResultCode)
-end;
+    {Determines two things whether or not ComCtrl is needed and whether or not we've already checked}
+    intComCtlNeeded: Integer;
 
 {Determines whether or not the user chose to create a start menu}
 Function GroupCreated(): boolean;
@@ -933,6 +945,159 @@ Begin
     }
 end;
 
+function Install7ZipDll(strDLL_Version: string): Boolean;
+Var
+    {Stores the file path of the 7-Zip File Manager Program}
+    str7Zip_Path: String;
+
+    {Stores the version of 7-Zip Installed}
+    str7Zip_Version: String;
+
+    {Stores the DLL's Version Function Input Parameter in integer format}
+    intDLL_Version: Integer;
+Begin
+
+    {If the actual version of 7-Zip Installed hasn't been determined yet then...}
+    If int7Zip_Version = 0 Then
+        Begin
+	       {Detects the install location of 7-Zip from the registry, if it's installed}
+	       RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\7zFM.exe', '', str7Zip_Path)
+
+	        {If there is 7-Zip information in the registry then...}
+			If length(str7Zip_Path) > 0 Then
+				begin
+					{If the 7zFM.exe file exists then...}
+					If FileExists(str7Zip_Path) = True Then
+						Begin
+							{Detects the version of the 7-Zip Installed}
+							GetVersionNumbersString(str7Zip_Path, str7Zip_Version)
+							{If the version of 7-Zip Installed is at least 3.11 Then...}
+							If VersionAtLeast(str7Zip_Version, 3, 11, 0, 0) = True Then
+								begin
+									{If the user has 3.12 or higher installed then...}
+									If VersionAtLeast(str7Zip_Version, 3, 12, 0, 0) = True Then
+										Begin
+											{If the user has 3.13 or higher installed then...}
+											If VersionAtLeast(str7Zip_Version, 3, 13, 0, 0) = True Then
+												Begin
+													{If the user has 4.20 or higher installed then...}
+													If VersionAtLeast(str7Zip_Version, 4, 20, 0, 0) = True Then
+														Begin
+															{If the user has 4.23 or higher installed then...}
+															If VersionAtLeast(str7Zip_Version, 4, 23, 0, 0) = True Then
+																Begin
+																	{If the user has 4.31 or higher installed then...}
+																		If VersionAtLeast(str7Zip_Version, 4, 31, 0, 0) = True Then				
+																		Begin
+																			{If the user has 4.32 or higher installed then...}
+																			If VersionAtLeast(str7Zip_Version, 4, 32, 0, 0) = True Then
+																				Begin
+																					{If the user has 4.32 or higher installed then...}
+																					If VersionAtLeast(str7Zip_Version, 4, 42, 0, 0) = True Then
+																						Begin
+																							{If the user has 4.57 or higher installed then...}
+																							If VersionAtLeast(str7Zip_Version, 4, 57, 0, 0) = True Then
+																								Begin
+																									{If the user has 465 or higher installed then...}
+																									If VersionAtLeast(str7Zip_Version, 4, 65, 0, 0) = True Then
+																								{We record the version of 7-Zip installed as 4.42 regardless of whether or not it's actually 4.21, 4.22, etc..}
+																										int7Zip_Version := 465
+																									Else
+																								int7Zip_Version := 457
+																								end
+																							Else
+																								{Since it was at least 4.42, but not 4.57 then it must be 4.42}
+																								int7Zip_Version := 442
+																						end
+																					Else
+																						{Since it was at least 4.32, but not 4.42 then it must be 4.32}
+																						int7Zip_Version := 432
+																				end
+																			Else
+																				{Since it was at least 4.31, but not 4.32 then it must be 4.31}
+																				int7Zip_Version := 431
+																		end
+																	Else
+																		{Since it was at least 4.23, but not 4.31 then it must be 4.23}
+																		int7Zip_Version := 423
+																end
+															Else
+																{Since it was at least 4.20, but not 4.23 then it must be 4.20}
+																int7Zip_Version := 420
+														end
+													Else
+														{Since it was at least 3.13, but not 4.20 then it must be 3.13}
+														int7Zip_Version := 313
+												end
+											Else
+												{Since it was at least 3.12, but not 3.13 then it must be 3.12}
+												int7Zip_Version := 312;
+										end
+									Else
+										{Since it was at least 3.11, but not 3.12 then it must be 3.11}
+										int7Zip_Version := 311;
+								end;
+						End
+					Else
+						{Records that the 7-Zip program didn't exist for the rest of the installation}
+						int7Zip_Version := -1;
+				end
+			Else
+				{Records that the 7-Zip program wasn't installed for rest of the installation}
+				int7Zip_Version := -1;
+	    end;
+
+    {Converts the DLL Version String to an Integer for numeric evaluation}
+    intDLL_Version := StrToInt(strDLL_Version);
+
+	{If 7-Zip either wasn't installed or was of inadequate version then...}
+	If int7Zip_Version = -1 Then
+		Begin
+			{If the program is trying to determine if the 313 DLL should be installed then the answer is yes
+			we install this, because it's the most recent version and if they were to install 7-zip this
+			would be the version they'd want (since people generally install the latest and greatest)}
+			if intDLL_Version = 313 Then
+				Result := True
+
+			{If the program is trying to install anything, but 313 on a system without 7-Zip
+			then we disallow the installation of that DLL}
+			else
+				Result := False;
+		End
+
+	{If the version of 7-Zip was sufficient then...}
+	Else
+		Begin
+			{if the version the program is trying to install matches the version installed on the clients system then...}
+			If int7Zip_Version = intDLL_Version Then
+				Result := True
+
+			{If the program is trying to install the 31X DLL on a 31Y system then we won't allow the file to be copied...}
+            else
+				Result := False;
+		End;
+
+    {Debug:
+    If UsingWinNT = True Then
+        begin
+            If Result = True Then
+                Msgbox('We''re are installing Merge7z' + strDLL_Version + 'U.DLL because the system has 7-Zip ' + IntToStr(int7Zip_Version) + ' installed.', mbInformation, mb_Ok)
+            Else
+                Msgbox('We''re aren''t installing Merge7z' + strDLL_Version + 'U.DLL because the system has 7-Zip ' + IntToStr(int7Zip_Version) + ' installed.', mbInformation, mb_Ok);
+        end
+
+
+    Else
+         begin
+            If Result = True Then
+                Msgbox('We''re are installing Merge7z' + strDLL_Version + '.DLL because the system has 7-Zip ' + IntToStr(int7Zip_Version) + ' installed.', mbInformation, mb_Ok)
+            Else
+                Msgbox('We''re aren''t installing Merge7z' + strDLL_Version + '.DLL because the system has 7-Zip ' + IntToStr(int7Zip_Version) + ' installed.', mbInformation, mb_Ok);
+        end }
+
+End;
+
+
 {Determines whether or not TortoiseCVS is installed}
 Function TortoiseCVSInstalled(): boolean;
 Begin
@@ -996,19 +1161,20 @@ Begin
     If CurPage = wpInstalling Then
             {Delete the previous start menu group if the location has changed since the last install}
             DeletePreviousStartMenu;
-	// OPEN CANDY START
-	OpenCandyCurPageChanged(CurPage);
-	// OPEN CANDY END
 End;
 
 // Checks if context menu is already enabled for shell extension
 // If so, we won't overwrite its existing value in [Registry] section
-Function ShellMenuEnabled(): Boolean;
+Function ShellMenuEnabled(Unused: string): string;
+Var
+  ContextMenuEnabled: DWORD;
 Begin
-  If RegValueExists(HKCU, 'Software\Thingamahoochie\WinMerge', 'ContextMenuEnabled') Then
-    result := True
-  Else
-    result := False;
+  ContextMenuEnabled := 0;
+  RegQueryDWORDValue(HKCU, 'Software\Thingamahoochie\WinMerge', 'ContextMenuEnabled', ContextMenuEnabled);
+  if IsTaskSelected('ShellExtension') then
+    Result := inttostr(ContextMenuEnabled or 1)
+  else
+    Result := '0';
 End;
 
 {Replace one occurrence of OldStr in Str with NewStr}
@@ -1117,9 +1283,6 @@ Begin
             IntegrateClearCase('..\..\bin\cleardiffmrg.exe', WinMergeExeName());
         end;
     end;
-	// OPEN CANDY START
-	OpenCandyCurStepChanged(CurStep);
-	// OPEN CANDY END
 End;
 
 Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -1141,139 +1304,3 @@ Begin
         IntegrateClearCase(WinMergeExeName(), '..\..\bin\cleardiffmrg.exe');
     end;
 End;
-
-procedure InitializeWizard;
-Var OCstrInstallerLanguage: String;
-begin
-  // OPEN CANDY START
-  // Convert the internal language name to an ISO 639-1 code. Find a list at http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
-  Case ActiveLanguage of
-  'default' : Begin
-    OCstrInstallerLanguage := 'en';
-      End;
-  'English' : Begin
-    OCstrInstallerLanguage := 'en';
-      End;
-  'Bulgarian' : Begin
-    OCstrInstallerLanguage := 'bg';
-      End;
-  'Catalan' : Begin
-    OCstrInstallerLanguage := 'ca';
-      End;
-  'Chinese_Simplified' : Begin
-    OCstrInstallerLanguage := 'zh';
-      End;
-  'Chinese_Traditional' : Begin
-    OCstrInstallerLanguage := 'zh';
-      End;
-  'Croatian' : Begin
-    OCstrInstallerLanguage := 'hr';
-      End;
-  'Czech' : Begin
-    OCstrInstallerLanguage := 'cs';
-      End;
-  'Danish' : Begin
-    OCstrInstallerLanguage := 'da';
-      End;
-  'Dutch' : Begin
-    OCstrInstallerLanguage := 'nl';
-      End;
-  'French' : Begin
-    OCstrInstallerLanguage := 'fr';
-      End;
-  'Galician' : Begin
-    OCstrInstallerLanguage := 'gl';
-      End;
-  'German' : Begin
-    OCstrInstallerLanguage := 'de';
-      End;
-  'Greek' : Begin
-    OCstrInstallerLanguage := 'el';
-      End;
-  'Hungarian' : Begin
-    OCstrInstallerLanguage := 'hu';
-      End;
-  'Italian' : Begin
-    OCstrInstallerLanguage := 'it';
-      End;
-  'Japanese' : Begin
-    OCstrInstallerLanguage := 'ja';
-      End;
-  'Korean' : Begin
-    OCstrInstallerLanguage := 'ko';
-      End;
-  'Norwegian' : Begin
-    OCstrInstallerLanguage := 'no';
-      End;
-  'Persian' : Begin
-    OCstrInstallerLanguage := 'fa';
-      End;
-  'Polish' : Begin
-    OCstrInstallerLanguage := 'pl';
-      End;
-  'Portuguese' : Begin
-    OCstrInstallerLanguage := 'pt';
-      End;
-  'PortugueseBrazilian' : Begin
-    OCstrInstallerLanguage := 'pt';
-      End;
-  'Romanian' : Begin
-    OCstrInstallerLanguage := 'ro';
-      End;
-  'Russian' : Begin
-    OCstrInstallerLanguage := 'ru';
-      End;
-  'Serbian' : Begin
-    OCstrInstallerLanguage := 'sr';
-      End;
-  'Slovak' : Begin
-    OCstrInstallerLanguage := 'sk';
-      End;
-  'Slovenian' : Begin
-    OCstrInstallerLanguage := 'sl';
-      End;
-  'Spanish' : Begin
-    OCstrInstallerLanguage := 'es';
-      End;
-  'Swedish' : Begin
-    OCstrInstallerLanguage := 'sv';
-      End;
-  'Turkish' : Begin
-    OCstrInstallerLanguage := 'tr';
-      End;
-  'Ukrainian' : Begin
-    OCstrInstallerLanguage := 'uk';
-      End;
-  End;  {End Case}
-	OpenCandyInit('{#OC_STR_MY_PRODUCT_NAME}','{#OC_STR_KEY}','{#OC_STR_SECRET}',OCstrInstallerLanguage ,'{#OC_STR_REGISTRY_PATH}');
-	// OPEN CANDY END
-end;
-
-function ShouldSkipPage(PageID: Integer): Boolean;
-begin
-	// OPEN CANDY START
-	Result := OpenCandyShouldSkipPage(PageID);
-	// OPEN CANDY END
-end;
-
-function NextButtonClick(CurPageID: Integer): Boolean;
-begin
-	// OPEN CANDY START
-	Result := OpenCandyNextButtonClick(CurPageID);
-	// OPEN CANDY END
-end;
-
-function BackButtonClick(CurPageID: Integer): Boolean;
-begin
-	// OPEN CANDY START
-	Result := OpenCandyBackButtonClick(CurPageID);
-	// OPEN CANDY END
-end;
-
-procedure DeinitializeSetup();
-begin
-	// OPEN CANDY START
-	OpenCandyDeinitializeSetup();
-	// OPEN CANDY END
-end;
-

@@ -27,7 +27,7 @@
  */
 
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: MergeCmdLineInfo.cpp 6940 2009-08-01 17:29:01Z kimmov $
 
 #include <windows.h>
 #include <tchar.h>
@@ -122,11 +122,10 @@ MergeCmdLineInfo::MergeCmdLineInfo(LPCTSTR q):
 	m_bSingleInstance(false),
 	m_bShowUsage(false),
 	m_nCodepage(0),
-	m_dwLeftFlags(FFILEOPEN_NONE),
-	m_dwRightFlags(FFILEOPEN_NONE)
+	m_dwLeftFlags(FFILEOPEN_CMDLINE),
+	m_dwMiddleFlags(FFILEOPEN_CMDLINE),
+	m_dwRightFlags(FFILEOPEN_CMDLINE)
 {
-	m_Files.reserve(2);
-
 	// Rational ClearCase has a weird way of executing external
 	// tools which replace the build-in ones. It also doesn't allow
 	// you to define which parameters to send to the executable.
@@ -170,7 +169,7 @@ void MergeCmdLineInfo::ParseClearCaseCmdLine(LPCTSTR q, LPCTSTR basedesc)
 		{
 			// Not a flag
 			param = paths_GetLongPath(param.c_str());
-			m_Files.push_back(param);
+			m_Files.SetPath(m_Files.GetSize(), param.c_str());
 			if (param == m_sLeftDesc)
 				m_dwLeftFlags &= ~FFILEOPEN_READONLY;
 			if (param == m_sRightDesc)
@@ -208,7 +207,7 @@ void MergeCmdLineInfo::ParseClearCaseCmdLine(LPCTSTR q, LPCTSTR basedesc)
 	if (!sOutFile.empty())
 	{
 		String path = paths_GetLongPath(sOutFile.c_str());
-		m_Files.push_back(path);
+		m_sOutputpath = path;
 	}
 }
 
@@ -232,13 +231,13 @@ void MergeCmdLineInfo::AddPath(const String &path)
 	param = paths_GetLongPath(param.c_str());
 
 	// Set flag indicating path is from command line
-	const size_t ord = m_Files.size();
+	const size_t ord = m_Files.GetSize();
 	if (ord == 0)
 		m_dwLeftFlags |= FFILEOPEN_CMDLINE;
 	else if (ord == 1)
 		m_dwRightFlags |= FFILEOPEN_CMDLINE;
 
-	m_Files.push_back(param);
+	m_Files.SetPath(m_Files.GetSize(), param.c_str());
 }
 
 /**
@@ -262,10 +261,20 @@ void MergeCmdLineInfo::ParseWinMergeCmdLine(LPCTSTR q)
 			// -? to show common command line arguments.
 			m_bShowUsage = true;
 		}
+		else if (param == _T("o"))
+		{
+			// -o "outputfilename"
+			q = EatParam(q, m_sOutputpath);
+		}
 		else if (param == _T("dl"))
 		{
 			// -dl "desc" - description for left file
 			q = EatParam(q, m_sLeftDesc);
+		}
+		else if (param == _T("dm"))
+		{
+			// -dr "desc" - description for middle file
+			q = EatParam(q, m_sMiddleDesc);
 		}
 		else if (param == _T("dr"))
 		{
@@ -325,6 +334,11 @@ void MergeCmdLineInfo::ParseWinMergeCmdLine(LPCTSTR q)
 			// -wl to open left path as read-only
 			m_dwLeftFlags |= FFILEOPEN_READONLY;
 		}
+		else if (param == _T("wm"))
+		{
+			// -wm to open middle path as read-only
+			m_dwMiddleFlags |= FFILEOPEN_READONLY;
+		}
 		else if (param == _T("wr"))
 		{
 			// -wr to open right path as read-only
@@ -335,6 +349,11 @@ void MergeCmdLineInfo::ParseWinMergeCmdLine(LPCTSTR q)
 			// -ul to not add left path to MRU
 			m_dwLeftFlags |= FFILEOPEN_NOMRU;
 		}
+		else if (param == _T("um"))
+		{
+			// -um to not add middle path to MRU
+			m_dwMiddleFlags |= FFILEOPEN_NOMRU;
+		}
 		else if (param == _T("ur"))
 		{
 			// -ur to not add right path to MRU
@@ -344,6 +363,7 @@ void MergeCmdLineInfo::ParseWinMergeCmdLine(LPCTSTR q)
 		{
 			// -u or -ub (deprecated) to add neither right nor left path to MRU
 			m_dwLeftFlags |= FFILEOPEN_NOMRU;
+			m_dwMiddleFlags |= FFILEOPEN_NOMRU;
 			m_dwRightFlags |= FFILEOPEN_NOMRU;
 		}
 		else if (param == _T("x"))
@@ -381,7 +401,7 @@ void MergeCmdLineInfo::ParseWinMergeCmdLine(LPCTSTR q)
 		}
 	}
 	// If "compare file dir" make it "compare file dir\file".
-	if (m_Files.size() >= 2)
+	if (m_Files.GetSize() >= 2)
 	{
 		PATH_EXISTENCE p1 = paths_DoesPathExist(m_Files[0].c_str());
 		PATH_EXISTENCE p2 = paths_DoesPathExist(m_Files[1].c_str());

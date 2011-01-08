@@ -18,7 +18,7 @@
  *  @brief Implementation of FileFilterMgr and supporting routines
  */ 
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: FileFilterMgr.cpp 7024 2009-10-22 18:26:45Z kimmov $
 
 #include <windows.h>
 #include <string.h>
@@ -162,7 +162,9 @@ static void AddFilterPattern(vector<FileFilterElement*> *filterList, String & st
 	char *regexString = UCS2UTF8_ConvertToUtf8(str.c_str());
 	int pcre_opts = 0;
 
-
+#ifdef UNICODE
+	pcre_opts |= PCRE_UTF8;
+#endif
 	pcre_opts |= PCRE_CASELESS;
 	pcre *regexp = pcre_compile(regexString, pcre_opts, &errormsg,
 		&erroroffset, NULL);
@@ -290,8 +292,8 @@ FileFilter * FileFilterMgr::GetFilterByPath(LPCTSTR szFilterPath)
 BOOL TestAgainstRegList(const vector<FileFilterElement*> *filterList, LPCTSTR szTest)
 {
 	int ovector[30];
-	size_t stringlen =_tcslen(szTest);
 	char *compString = UCS2UTF8_ConvertToUtf8(szTest);
+	size_t stringlen = strlen(compString);
 	int result = 0;
 	vector<FileFilterElement*>::const_iterator iter = filterList->begin();
 	while (iter != filterList->end())

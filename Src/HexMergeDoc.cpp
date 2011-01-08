@@ -25,7 +25,7 @@
  *
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: HexMergeDoc.cpp 7166 2010-05-16 12:05:13Z jtuc $
 
 #include "stdafx.h"
 #include <afxinet.h>
@@ -59,26 +59,36 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-static void UpdateDiffItem(DIFFITEM &di, CDiffContext *pCtxt);
+int CHexMergeDoc::m_nBuffersTemp = 2;
+
+static void UpdateDiffItem(int nBuffers, DIFFITEM &di, CDiffContext *pCtxt);
 static int Try(HRESULT hr, UINT type = MB_OKCANCEL|MB_ICONSTOP);
 
 /**
  * @brief Update diff item
  */
-static void UpdateDiffItem(DIFFITEM &di, CDiffContext *pCtxt)
+static void UpdateDiffItem(int nBuffers, DIFFITEM &di, CDiffContext *pCtxt)
 {
 	di.diffcode.diffcode |= DIFFCODE::SIDEFLAGS;
-	di.left.ClearPartial();
-	di.right.ClearPartial();
-	if (!pCtxt->UpdateInfoFromDiskHalf(di, TRUE))
-		di.diffcode.diffcode &= ~DIFFCODE::LEFT;
-	if (!pCtxt->UpdateInfoFromDiskHalf(di, FALSE))
-		di.diffcode.diffcode &= ~DIFFCODE::RIGHT;
+	for (int nBuffer = 0; nBuffer < nBuffers; nBuffer++)
+	{
+		di.diffFileInfo[nBuffer].ClearPartial();
+		di.diffFileInfo[nBuffer].ClearPartial();
+		if (!pCtxt->UpdateInfoFromDiskHalf(di, nBuffer))
+		{
+			if (nBuffer == 0)
+				di.diffcode.diffcode &= ~DIFFCODE::FIRST;
+			else if (nBuffer == 1)
+				di.diffcode.diffcode &= ~DIFFCODE::SECOND;
+			else
+				di.diffcode.diffcode &= ~DIFFCODE::THIRD;
+		}
+	}
 	// 1. Clear flags
 	di.diffcode.diffcode &= ~(DIFFCODE::TEXTFLAGS | DIFFCODE::COMPAREFLAGS);
 	// 2. Process unique files
 	// We must compare unique files to itself to detect encoding
-	if (di.diffcode.isSideLeftOnly() || di.diffcode.isSideRightOnly())
+	if (!di.diffcode.isExistsFirst() || !di.diffcode.isExistsSecond() || (nBuffers == 3 && di.diffcode.isExistsThird()))
 	{
 		int compareMethod = pCtxt->GetCompareMethod();
 		if (compareMethod != CMP_DATE && compareMethod != CMP_DATE_SIZE &&
@@ -86,7 +96,7 @@ static void UpdateDiffItem(DIFFITEM &di, CDiffContext *pCtxt)
 		{
 			di.diffcode.diffcode |= DIFFCODE::SAME;
 			FolderCmp folderCmp;
-			int diffCode = folderCmp.prepAndCompareTwoFiles(pCtxt, di);
+			int diffCode = folderCmp.prepAndCompareFiles(pCtxt, di);
 			// Add possible binary flag for unique items
 			if (diffCode & DIFFCODE::BIN)
 				di.diffcode.diffcode |= DIFFCODE::BIN;
@@ -97,7 +107,7 @@ static void UpdateDiffItem(DIFFITEM &di, CDiffContext *pCtxt)
 	{
 		// Really compare
 		FolderCmp folderCmp;
-		di.diffcode.diffcode |= folderCmp.prepAndCompareTwoFiles(pCtxt, di);
+		di.diffcode.diffcode |= folderCmp.prepAndCompareFiles(pCtxt, di);
 	}
 }
 
@@ -144,10 +154,12 @@ END_MESSAGE_MAP()
 CHexMergeDoc::CHexMergeDoc()
 : m_pDirDoc(NULL)
 {
-	m_pView[MERGE_VIEW_LEFT] = NULL;
-	m_pView[MERGE_VIEW_RIGHT] = NULL;
-	m_nBufferType[0] = BUFFER_NORMAL;
-	m_nBufferType[1] = BUFFER_NORMAL;
+	m_nBuffers = m_nBuffersTemp;
+	for (int nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
+	{
+		m_pView[nBuffer] = NULL;
+		m_nBufferType[nBuffer] = BUFFER_NORMAL;
+	}
 }
 
 /**
@@ -175,15 +187,26 @@ void CHexMergeDoc::UpdateDiffItem(CDirDoc *pDirDoc)
 		if (UINT_PTR pos = pDirDoc->FindItemFromPaths(pathLeft.c_str(), pathRight.c_str()))
 		{
 			DIFFITEM &di = pDirDoc->GetDiffRefByKey(pos);
-			::UpdateDiffItem(di, &ctxt);
+			::UpdateDiffItem(m_nBuffers, di, &ctxt);
 		}
 	}
-	int lengthLeft = m_pView[MERGE_VIEW_LEFT]->GetLength();
-	void *bufferLeft = m_pView[MERGE_VIEW_LEFT]->GetBuffer(lengthLeft);
-	int lengthRight = m_pView[MERGE_VIEW_RIGHT]->GetLength();
-	void *bufferRight = m_pView[MERGE_VIEW_RIGHT]->GetBuffer(lengthRight);
-	GetParentFrame()->SetLastCompareResult(lengthLeft != lengthRight ||
-		bufferLeft && bufferRight && memcmp(bufferLeft, bufferRight, lengthLeft));
+	BOOL bDiff = FALSE;
+	int lengthFirst = m_pView[0]->GetLength();
+	void *bufferFirst = m_pView[0]->GetBuffer(lengthFirst);
+	for (int nBuffer = 1; nBuffer < m_nBuffers; nBuffer++)
+	{
+		int length = m_pView[nBuffer]->GetLength();
+		if (lengthFirst != length)
+			bDiff = TRUE;
+		else
+		{
+			void *buffer = m_pView[nBuffer]->GetBuffer(length);
+			bDiff = (memcmp(bufferFirst, buffer, lengthFirst) != 0);
+		}
+		if (bDiff)
+			break;
+	}
+	GetParentFrame()->SetLastCompareResult(bDiff);
 }
 
 /**
@@ -191,27 +214,44 @@ void CHexMergeDoc::UpdateDiffItem(CDirDoc *pDirDoc)
  */
 BOOL CHexMergeDoc::PromptAndSaveIfNeeded(BOOL bAllowCancel)
 {
-	const BOOL bLModified = m_pView[MERGE_VIEW_LEFT]->GetModified();
-	const BOOL bRModified = m_pView[MERGE_VIEW_RIGHT]->GetModified();
+	BOOL bLModified = FALSE, bMModified = FALSE, bRModified = FALSE;
 
-	if (!bLModified && !bRModified) //Both files unmodified
-		return TRUE;
+	if (m_nBuffers == 3)
+	{
+		bLModified = m_pView[0]->GetModified();
+		bMModified = m_pView[1]->GetModified();
+		bRModified = m_pView[2]->GetModified();
+	}
+	else
+	{
+		bLModified = m_pView[0]->GetModified();
+		bRModified = m_pView[1]->GetModified();
+	}
+	if (!bLModified && !bMModified && !bRModified)
+		 return TRUE;
 
 	const String &pathLeft = m_filePaths.GetLeft();
+	const String &pathMiddle = m_filePaths.GetMiddle();
 	const String &pathRight = m_filePaths.GetRight();
 
 	BOOL result = TRUE;
-	BOOL bLSaveSuccess = FALSE;
-	BOOL bRSaveSuccess = FALSE;
+	BOOL bLSaveSuccess = FALSE, bMSaveSuccess = FALSE, bRSaveSuccess = FALSE;
 
 	SaveClosingDlg dlg;
-	dlg.DoAskFor(bLModified, bRModified);
+	dlg.DoAskFor(bLModified, bMModified, bRModified);
 	if (!bAllowCancel)
 		dlg.m_bDisableCancel = TRUE;
 	if (!pathLeft.empty())
 		dlg.m_sLeftFile = pathLeft.c_str();
 	else
 		dlg.m_sLeftFile = m_strDesc[0].c_str();
+	if (m_nBuffers == 3)
+	{
+		if (!pathMiddle.empty())
+			dlg.m_sMiddleFile = pathMiddle.c_str();
+		else
+			dlg.m_sMiddleFile = m_strDesc[1].c_str();
+	}
 	if (!pathRight.empty())
 		dlg.m_sRightFile = pathRight.c_str();
 	else
@@ -223,7 +263,7 @@ BOOL CHexMergeDoc::PromptAndSaveIfNeeded(BOOL bAllowCancel)
 		{
 			if (dlg.m_leftSave == SaveClosingDlg::SAVECLOSING_SAVE)
 			{
-				switch (Try(m_pView[MERGE_VIEW_LEFT]->SaveFile(pathLeft.c_str())))
+				switch (Try(m_pView[0]->SaveFile(pathLeft.c_str())))
 				{
 				case 0:
 					bLSaveSuccess = TRUE;
@@ -235,14 +275,14 @@ BOOL CHexMergeDoc::PromptAndSaveIfNeeded(BOOL bAllowCancel)
 			}
 			else
 			{
-				m_pView[MERGE_VIEW_LEFT]->SetModified(FALSE);
+				m_pView[0]->SetModified(FALSE);
 			}
 		}
-		if (bRModified)
+		if (bMModified)
 		{
-			if (dlg.m_rightSave == SaveClosingDlg::SAVECLOSING_SAVE)
+			if (dlg.m_middleSave == SaveClosingDlg::SAVECLOSING_SAVE)
 			{
-				switch (Try(m_pView[MERGE_VIEW_RIGHT]->SaveFile(pathRight.c_str())))
+				switch (Try(m_pView[1]->SaveFile(pathMiddle.c_str())))
 				{
 				case 0:
 					bRSaveSuccess = TRUE;
@@ -254,7 +294,26 @@ BOOL CHexMergeDoc::PromptAndSaveIfNeeded(BOOL bAllowCancel)
 			}
 			else
 			{
-				m_pView[MERGE_VIEW_RIGHT]->SetModified(FALSE);
+				m_pView[1]->SetModified(FALSE);
+			}
+		}
+		if (bRModified)
+		{
+			if (dlg.m_rightSave == SaveClosingDlg::SAVECLOSING_SAVE)
+			{
+				switch (Try(m_pView[m_nBuffers - 1]->SaveFile(pathRight.c_str())))
+				{
+				case 0:
+					bRSaveSuccess = TRUE;
+					break;
+				case IDCANCEL:
+					result = FALSE;
+					break;
+				}
+			}
+			else
+			{
+				m_pView[m_nBuffers - 1]->SetModified(FALSE);
 			}
 		}
 	}
@@ -287,22 +346,49 @@ BOOL CHexMergeDoc::SaveModified()
 void CHexMergeDoc::OnFileSave() 
 {
 	BOOL bUpdate = FALSE;
-	if (m_pView[MERGE_VIEW_LEFT]->GetModified())
+	for (int nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
 	{
-		const String &pathLeft = m_filePaths.GetLeft();
-		if (Try(m_pView[MERGE_VIEW_LEFT]->SaveFile(pathLeft.c_str())) == IDCANCEL)
-			return;
-		bUpdate = TRUE;
-	}
-	if (m_pView[MERGE_VIEW_RIGHT]->GetModified())
-	{
-		const String &pathRight = m_filePaths.GetRight();
-		if (Try(m_pView[MERGE_VIEW_RIGHT]->SaveFile(pathRight.c_str())) == IDCANCEL)
-			return;
-		bUpdate = TRUE;
+		if (m_pView[nBuffer]->GetModified())
+		{
+			const String &path = m_filePaths.GetPath(nBuffer);
+			if (Try(m_pView[nBuffer]->SaveFile(path.c_str())) == IDCANCEL)
+				return;
+			bUpdate = TRUE;
+		}
 	}
 	if (bUpdate)
 		UpdateDiffItem(m_pDirDoc);
+}
+
+void CHexMergeDoc::DoFileSave(int nBuffer)
+{
+	if (m_pView[nBuffer]->GetModified())
+	{
+		const String &path = m_filePaths.GetPath(nBuffer);
+		if (Try(m_pView[nBuffer]->SaveFile(path.c_str())) == IDCANCEL)
+			return;
+		UpdateDiffItem(m_pDirDoc);
+	}
+}
+
+void CHexMergeDoc::DoFileSaveAs(int nBuffer)
+{
+	const String &path = m_filePaths.GetPath(nBuffer);
+	CString strPath;
+	int id;
+	if (nBuffer == 0)
+		id = IDS_SAVE_LEFT_AS;
+	else if (nBuffer == m_nBuffers - 1)
+		id = IDS_SAVE_RIGHT_AS;
+	else
+		id = IDS_SAVE_MIDDLE_AS;
+	if (SelectFile(0, strPath, path.c_str(), id, NULL, FALSE))
+	{
+		if (Try(m_pView[nBuffer]->SaveFile(strPath)) == IDCANCEL)
+			return;
+		m_filePaths.SetPath(nBuffer, strPath);
+		UpdateDiffItem(m_pDirDoc);
+	}
 }
 
 /**
@@ -310,13 +396,15 @@ void CHexMergeDoc::OnFileSave()
  */
 void CHexMergeDoc::OnFileSaveLeft()
 {
-	if (m_pView[MERGE_VIEW_LEFT]->GetModified())
-	{
-		const String &pathLeft = m_filePaths.GetLeft();
-		if (Try(m_pView[MERGE_VIEW_LEFT]->SaveFile(pathLeft.c_str())) == IDCANCEL)
-			return;
-		UpdateDiffItem(m_pDirDoc);
-	}
+	DoFileSave(0);
+}
+
+/**
+ * @brief Saves middle-side file
+ */
+void CHexMergeDoc::OnFileSaveMiddle()
+{
+	DoFileSave(1);
 }
 
 /**
@@ -324,13 +412,7 @@ void CHexMergeDoc::OnFileSaveLeft()
  */
 void CHexMergeDoc::OnFileSaveRight()
 {
-	if (m_pView[MERGE_VIEW_RIGHT]->GetModified())
-	{
-		const String &pathRight = m_filePaths.GetRight();
-		if (Try(m_pView[MERGE_VIEW_RIGHT]->SaveFile(pathRight.c_str())) == IDCANCEL)
-			return;
-		UpdateDiffItem(m_pDirDoc);
-	}
+	DoFileSave(m_nBuffers - 1);
 }
 
 /**
@@ -338,15 +420,15 @@ void CHexMergeDoc::OnFileSaveRight()
  */
 void CHexMergeDoc::OnFileSaveAsLeft()
 {
-	const String &pathLeft = m_filePaths.GetLeft();
-	CString strPath;
-	if (SelectFile(0, strPath, pathLeft.c_str(), IDS_SAVE_LEFT_AS, NULL, FALSE))
-	{
-		if (Try(m_pView[MERGE_VIEW_LEFT]->SaveFile(strPath)) == IDCANCEL)
-			return;
-		m_filePaths.SetLeft(strPath);
-		UpdateDiffItem(m_pDirDoc);
-	}
+	DoFileSaveAs(0);
+}
+
+/**
+ * @brief Saves right-side file with name asked
+ */
+void CHexMergeDoc::OnFileSaveAsMiddle()
+{
+	DoFileSaveAs(1);
 }
 
 /**
@@ -354,15 +436,7 @@ void CHexMergeDoc::OnFileSaveAsLeft()
  */
 void CHexMergeDoc::OnFileSaveAsRight()
 {
-	const String &pathRight = m_filePaths.GetRight();
-	CString strPath;
-	if (SelectFile(0, strPath, pathRight.c_str(), IDS_SAVE_LEFT_AS, NULL, FALSE))
-	{
-		if (Try(m_pView[MERGE_VIEW_RIGHT]->SaveFile(strPath)) == IDCANCEL)
-			return;
-		m_filePaths.SetRight(strPath);
-		UpdateDiffItem(m_pDirDoc);
-	}
+	DoFileSaveAs(m_nBuffers - 1);
 }
 
 /**
@@ -388,7 +462,7 @@ void CHexMergeDoc::SetDirDoc(CDirDoc * pDirDoc)
  */
 CHexMergeFrame * CHexMergeDoc::GetParentFrame() 
 {
-	return static_cast<CHexMergeFrame *>(m_pView[MERGE_VIEW_LEFT]->GetParentFrame()); 
+	return static_cast<CHexMergeFrame *>(m_pView[0]->GetParentFrame()); 
 }
 
 /**
@@ -437,18 +511,23 @@ HRESULT CHexMergeDoc::LoadOneFile(int index, LPCTSTR filename, BOOL readOnly)
 /**
  * @brief Load files and initialize frame's compare result icon
  */
-HRESULT CHexMergeDoc::OpenDocs(LPCTSTR pathLeft, LPCTSTR pathRight, BOOL bROLeft, BOOL bRORight)
+HRESULT CHexMergeDoc::OpenDocs(const PathContext &paths, BOOL bRO[])
 {
 	CHexMergeFrame *pf = GetParentFrame();
 	ASSERT(pf);
 	HRESULT hr;
-	if (SUCCEEDED(hr = LoadOneFile(MERGE_VIEW_LEFT, pathLeft, bROLeft)) &&
-		SUCCEEDED(hr = LoadOneFile(MERGE_VIEW_RIGHT, pathRight, bRORight)))
+	int nBuffer;
+	for (nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
+	{
+		if (FAILED(hr = LoadOneFile(nBuffer, paths.GetPath(nBuffer).c_str(), bRO[nBuffer])))
+			break;
+	}
+	if (nBuffer == m_nBuffers)
 	{
 		UpdateDiffItem(0);
 		pf->Invalidate();
 		if (GetOptionsMgr()->GetBool(OPT_SCROLL_TO_FIRST))
-			m_pView[MERGE_VIEW_LEFT]->SendMessage(WM_COMMAND, ID_FIRSTDIFF);
+			m_pView[0]->SendMessage(WM_COMMAND, ID_FIRSTDIFF);
 	}
 	else
 	{
@@ -477,12 +556,7 @@ void CHexMergeDoc::UpdateHeaderPath(int pane)
 	{
 		sText = m_filePaths.GetPath(pane);
 		if (m_pDirDoc)
-		{
-			if (pane == 0)
-				m_pDirDoc->ApplyLeftDisplayRoot(sText);
-			else
-				m_pDirDoc->ApplyRightDisplayRoot(sText);
-		}
+			m_pDirDoc->ApplyDisplayRoot(pane, sText);
 	}
 	if (m_pView[pane]->GetModified())
 		sText.insert(0, _T("* "));
@@ -498,42 +572,60 @@ void CHexMergeDoc::SetTitle(LPCTSTR lpszTitle)
 {
 	const TCHAR pszSeparator[] = _T(" - ");
 	String sTitle;
+	String sFileName[3];
 
 	if (lpszTitle)
 		sTitle = lpszTitle;
 	else
 	{
-		if (!m_strDesc[0].empty())
-			sTitle += m_strDesc[0];
+		for (int nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
+		{
+			if (!m_strDesc[nBuffer].empty())
+				sFileName[nBuffer] = m_strDesc[nBuffer];
+			else
+			{
+				String file;
+				String ext;
+				SplitFilename(m_filePaths[nBuffer].c_str(), NULL, &file, &ext);
+				sFileName[nBuffer] += file.c_str();
+				if (!ext.empty())
+				{
+					sFileName[nBuffer] += _T(".");
+					sFileName[nBuffer] += ext.c_str();
+				}
+			}
+		}
+		if (m_nBuffers < 3)
+		{
+			if (sFileName[0] == sFileName[1])
+			{
+				sTitle = sFileName[0];
+				sTitle += _T(" x 2");
+			}
+			else
+			{
+				sTitle = sFileName[0];
+				sTitle += pszSeparator;
+				sTitle += sFileName[1];
+			}
+		}
 		else
 		{
-			String file;
-			String ext;
-			SplitFilename(m_filePaths.GetLeft().c_str(), NULL, &file, &ext);
-			sTitle += file.c_str();
-			if (!ext.empty())
+			if (sFileName[0] == sFileName[1] && sFileName[0] == sFileName[2])
 			{
-				sTitle += _T(".");
-				sTitle += ext.c_str();
+				sTitle = sFileName[0];
+				sTitle += _T(" x 3");
+			}
+			else
+			{
+				sTitle = sFileName[0];
+				sTitle += pszSeparator;
+				sTitle += sFileName[1];
+				sTitle += pszSeparator;
+				sTitle += sFileName[2];
 			}
 		}
 
-		sTitle += pszSeparator;
-
-		if (!m_strDesc[1].empty())
-			sTitle += m_strDesc[1];
-		else
-		{
-			String file;
-			String ext;
-			SplitFilename(m_filePaths.GetRight().c_str(), NULL, &file, &ext);
-			sTitle += file.c_str();
-			if (!ext.empty())
-			{
-				sTitle += _T(".");
-				sTitle += ext.c_str();
-			}
-		}
 	}
 	CDocument::SetTitle(sTitle.c_str());
 }
@@ -542,12 +634,13 @@ void CHexMergeDoc::SetTitle(LPCTSTR lpszTitle)
  * @brief We have two child views (left & right), so we keep pointers directly
  * at them (the MFC view list doesn't have them both)
  */
-void CHexMergeDoc::SetMergeViews(CHexMergeView * pLeft, CHexMergeView * pRight)
+void CHexMergeDoc::SetMergeViews(CHexMergeView *pView[])
 {
-	ASSERT(pLeft && !m_pView[MERGE_VIEW_LEFT]);
-	m_pView[MERGE_VIEW_LEFT] = pLeft;
-	ASSERT(pRight && !m_pView[MERGE_VIEW_RIGHT]);
-	m_pView[MERGE_VIEW_RIGHT] = pRight;
+	for (int nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
+	{
+		ASSERT(pView[nBuffer] && !m_pView[nBuffer]);
+		m_pView[nBuffer] = pView[nBuffer];
+	}
 }
 
 /**
@@ -555,7 +648,15 @@ void CHexMergeDoc::SetMergeViews(CHexMergeView * pLeft, CHexMergeView * pRight)
  */
 void CHexMergeDoc::OnUpdateFileSaveLeft(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable(m_pView[MERGE_VIEW_LEFT]->GetModified());
+	pCmdUI->Enable(m_pView[0]->GetModified());
+}
+
+/**
+ * @brief Called when "Save middle" item is updated
+ */
+void CHexMergeDoc::OnUpdateFileSaveMiddle(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(m_nBuffers == 3 && m_pView[1]->GetModified());
 }
 
 /**
@@ -563,7 +664,7 @@ void CHexMergeDoc::OnUpdateFileSaveLeft(CCmdUI* pCmdUI)
  */
 void CHexMergeDoc::OnUpdateFileSaveRight(CCmdUI* pCmdUI)
 {
-	pCmdUI->Enable(m_pView[MERGE_VIEW_RIGHT]->GetModified());
+	pCmdUI->Enable(m_pView[m_nBuffers - 1]->GetModified());
 }
 
 /**
@@ -571,9 +672,10 @@ void CHexMergeDoc::OnUpdateFileSaveRight(CCmdUI* pCmdUI)
  */
 void CHexMergeDoc::OnUpdateFileSave(CCmdUI* pCmdUI)
 {
-	const BOOL bLModified = m_pView[MERGE_VIEW_LEFT]->GetModified();
-	const BOOL bRModified = m_pView[MERGE_VIEW_RIGHT]->GetModified();
-	pCmdUI->Enable(bLModified || bRModified);
+	BOOL bModified;
+	for (int nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
+		bModified |= m_pView[nBuffer]->GetModified();
+	pCmdUI->Enable(bModified);
 }
 
 /**
@@ -631,7 +733,7 @@ void CHexMergeDoc::CopyAll(CHexMergeView *pViewSrc, CHexMergeView *pViewDst)
  */
 void CHexMergeDoc::OnL2r()
 {
-	CopySel(m_pView[MERGE_VIEW_LEFT], m_pView[MERGE_VIEW_RIGHT]);
+	CopySel(m_pView[0], m_pView[1]);
 }
 
 /**
@@ -639,7 +741,7 @@ void CHexMergeDoc::OnL2r()
  */
 void CHexMergeDoc::OnR2l()
 {
-	CopySel(m_pView[MERGE_VIEW_RIGHT], m_pView[MERGE_VIEW_LEFT]);
+	CopySel(m_pView[1], m_pView[0]);
 }
 
 /**
@@ -647,7 +749,7 @@ void CHexMergeDoc::OnR2l()
  */
 void CHexMergeDoc::OnAllRight()
 {
-	CopyAll(m_pView[MERGE_VIEW_LEFT], m_pView[MERGE_VIEW_RIGHT]);
+	CopyAll(m_pView[0], m_pView[1]);
 }
 
 /**
@@ -655,7 +757,7 @@ void CHexMergeDoc::OnAllRight()
  */
 void CHexMergeDoc::OnAllLeft()
 {
-	CopyAll(m_pView[MERGE_VIEW_RIGHT], m_pView[MERGE_VIEW_LEFT]);
+	CopyAll(m_pView[1], m_pView[0]);
 }
 
 /**
@@ -663,8 +765,8 @@ void CHexMergeDoc::OnAllLeft()
  */
 void CHexMergeDoc::OnViewZoomIn()
 {
-	m_pView[MERGE_VIEW_LEFT]->ZoomText(1);
-	m_pView[MERGE_VIEW_RIGHT]->ZoomText(1);
+	for (int pane = 0; pane < m_nBuffers; pane++)
+		m_pView[pane]->ZoomText(1);
 }
 
 /**
@@ -672,8 +774,8 @@ void CHexMergeDoc::OnViewZoomIn()
  */
 void CHexMergeDoc::OnViewZoomOut()
 {
-	m_pView[MERGE_VIEW_LEFT]->ZoomText(-1);
-	m_pView[MERGE_VIEW_RIGHT]->ZoomText(-1);
+	for (int pane = 0; pane < m_nBuffers; pane++)
+		m_pView[pane]->ZoomText(-1);
 }
 
 /**
@@ -681,6 +783,6 @@ void CHexMergeDoc::OnViewZoomOut()
  */
 void CHexMergeDoc::OnViewZoomNormal()
 {
-	m_pView[MERGE_VIEW_LEFT]->ZoomText(0);
-	m_pView[MERGE_VIEW_RIGHT]->ZoomText(0);
+	for (int pane = 0; pane < m_nBuffers; pane++)
+		m_pView[pane]->ZoomText(0);
 }

@@ -4,7 +4,7 @@
  * @brief Implementation file for FilterList.
  */
 // ID line follows -- this is updated by SVN
-// $Id$
+// $Id: FilterList.cpp 7164 2010-05-15 13:57:32Z jtuc $
 
 #include <windows.h>
 #include <vector>
@@ -114,9 +114,16 @@ bool FilterList::Match(size_t stringlen, const char *string, int codepage/*=CP_U
 
 	// convert string into UTF-8
 	ucr::buffer buf(stringlen * 2);
+
+#ifdef _UNICODE
 	if (codepage != CP_UTF8)
-		ucr::convert(ucr::NONE, codepage, (const unsigned char *)string, 
-				stringlen, ucr::UTF8, CP_UTF8, &buf);
+			ucr::convert(ucr::NONE, codepage, (const unsigned char *)string, 
+					stringlen, ucr::UTF8, CP_UTF8, &buf);
+#else
+	if (codepage != GetACP())
+			ucr::convert(ucr::NONE, codepage, (const unsigned char *)string, 
+					stringlen, ucr::NONE, GetACP(), &buf);
+#endif
 
 	unsigned int i = 0;
 	while (i < count && retval == false)
@@ -126,7 +133,7 @@ bool FilterList::Match(size_t stringlen, const char *string, int codepage/*=CP_U
 		pcre * regexp = item.pRegExp;
 		pcre_extra * extra = item.pRegExpExtra;
 		int result;
-		if (codepage != CP_UTF8)
+		if (buf.size > 0)
 			result = pcre_exec(regexp, extra, (const char *)buf.ptr, buf.size,
 				0, 0, ovector, 30);
 		else
