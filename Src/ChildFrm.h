@@ -33,6 +33,7 @@
 #include "MergeEditStatus.h"
 #include "EditorFilepathBar.h"
 #include "DiffViewBar.h"
+#include "ConflictViewBar.h"
 #include "LocationBar.h"
 
 class CMergeDoc;
@@ -64,6 +65,7 @@ protected:
 	CSplitterWndEx m_wndSplitter;
 	CEditorFilePathBar m_wndFilePathBar;
 	CDiffViewBar m_wndDetailBar;
+	CConflictViewBar m_wndConflictBar;
 	CSplitterWndEx m_wndDetailSplitter;
 	CStatusBar m_wndStatusBar;
 	CLocationBar m_wndLocationBar;

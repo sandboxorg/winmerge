@@ -29,6 +29,7 @@
 #define AFX_MERGEDOC_H__BBCD4F90_34E4_11D1_BAA6_00A024706EDC__INCLUDED_
 
 #include "DiffTextBuffer.h"
+#include "ConflictTextBuffer.h"
 #include <boost/scoped_ptr.hpp>
 #include <vector>
 #include <map>
@@ -148,6 +149,7 @@ struct WordDiff {
 
 struct DiffFileInfo;
 class CMergeEditView;
+class CConflictTextView;
 class PackingInfo;
 class PrediffingInfo;
 class CChildFrame;
@@ -174,6 +176,7 @@ public:
 // Begin declaration of CMergeDoc
 
 	boost::scoped_ptr<CDiffTextBuffer> m_ptBuf[3]; /**< Left/Middle/Right side text buffer */
+	boost::scoped_ptr<CConflictTextBuffer> m_pConflictTextBuf;
 	int m_nBuffers;
 
 protected: // create from serialization only
@@ -224,6 +227,7 @@ public:
 	void GetPrediffer(PrediffingInfo * infoPrediffer);
 	void SetMergeViews(CMergeEditView * pView[]);
 	void SetMergeDetailViews(CMergeEditView * pView[]);
+	void SetConflictTextView(CConflictTextView * pConflictTextView);
 	void SetDirDoc(CDirDoc * pDirDoc);
 	void DirDocClosing(CDirDoc * pDirDoc);
 	bool CloseNow();
@@ -231,6 +235,7 @@ public:
 
 	CMergeEditView * GetView(int pane) const { return m_pView[pane]; }
 	CMergeEditView * GetDetailView(int pane) const { return m_pDetailView[pane]; }
+	CConflictTextView * GetConflictTextView() const { return m_pConflictTextView; }
 	CChildFrame * GetParentFrame();
 	const FileTextEncoding & GetEncoding(int file) const
 			{ return m_ptBuf[file]->getEncoding(); }
@@ -294,6 +299,7 @@ protected:
 	int m_nCurDiff; /**< Selected diff, 0-based index, -1 if no diff selected */
 	CMergeEditView * m_pView[3]; /**< Pointer to left/middle/right view */
 	CMergeEditView * m_pDetailView[3];
+	CConflictTextView * m_pConflictTextView;
 	CDirDoc * m_pDirDoc;
 	bool m_bEnableRescan; /**< Automatic rescan enabled/disabled */
 	COleDateTime m_LastRescan; /**< Time of last rescan (for delaying) */ 

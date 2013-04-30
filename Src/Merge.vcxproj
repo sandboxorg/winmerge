@@ -1489,6 +1489,9 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='X64 Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='X64 Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="ConflictTextBuffer.cpp" />
+    <ClCompile Include="ConflictTextView.cpp" />
+    <ClCompile Include="ConflictViewBar.cpp" />
     <ClCompile Include="CustomColors.cpp" />
     <ClCompile Include="DiffContext.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
@@ -8644,6 +8647,9 @@
     <ClInclude Include="Common\coretools.h" />
     <ClInclude Include="Common\coretypes.h" />
     <ClInclude Include="Common\CSubclass.h" />
+    <ClInclude Include="ConflictTextBuffer.h" />
+    <ClInclude Include="ConflictTextView.h" />
+    <ClInclude Include="ConflictViewBar.h" />
     <ClInclude Include="CustomColors.h" />
     <ClInclude Include="DiffContext.h" />
     <ClInclude Include="DiffFileData.h" />
