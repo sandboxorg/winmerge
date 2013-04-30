@@ -34,6 +34,7 @@
 #include "MainFrm.h"
 #include "MergeEditView.h"
 #include "LocationView.h"
+#include "ConflictTextView.h"
 #include "DiffViewBar.h"
 #include "charsets.h"
 #include "OptionsDef.h"
@@ -169,19 +170,30 @@ BOOL CChildFrame::OnCreateClient( LPCREATESTRUCT /*lpcs*/,
 	m_wndSplitter.ResizablePanes(TRUE);
 	m_wndSplitter.AutoResizePanes(GetOptionsMgr()->GetBool(OPT_RESIZE_PANES));
 
+	String sCaption = theApp.LoadString(IDS_LOCBAR_CAPTION);
+	if (!m_wndConflictBar.Create(this, sCaption.c_str(), WS_CHILD | WS_VISIBLE, ID_VIEW_CONFLICT_BAR))
+	{
+		TRACE0("Failed to create ConflictBar\n");
+		return FALSE;
+	}
+
 	// Merge frame has also a dockable bar at the very left
 	// This is not the client area, but we create it now because we want
 	// to use the CCreateContext
-	String sCaption = theApp.LoadString(IDS_LOCBAR_CAPTION);
+	sCaption = theApp.LoadString(IDS_LOCBAR_CAPTION);
 	if (!m_wndLocationBar.Create(this, sCaption.c_str(), WS_CHILD | WS_VISIBLE, ID_VIEW_LOCATION_BAR))
 	{
 		TRACE0("Failed to create LocationBar\n");
 		return FALSE;
 	}
 
-	CWnd* pWnd = new CLocationView;
-	DWORD dwStyle = AFX_WS_DEFAULT_VIEW ;// & ~WS_BORDER;
-	pWnd->Create(NULL, NULL, dwStyle, CRect(0,0,40,100), &m_wndLocationBar, 152, pContext);
+	CWnd* pWndConflictTextView = new CConflictTextView;
+	DWORD dwConflictTextViewStyle = AFX_WS_DEFAULT_VIEW ;// & ~WS_BORDER;
+	pWndConflictTextView->Create(NULL, NULL, dwConflictTextViewStyle, CRect(0,0,40,100), &m_wndConflictBar, 153, pContext);
+
+	CWnd* pWndLocationView = new CLocationView;
+	DWORD dwLocationViewStyle = AFX_WS_DEFAULT_VIEW ;// & ~WS_BORDER;
+	pWndLocationView->Create(NULL, NULL, dwLocationViewStyle, CRect(0,0,40,100), &m_wndLocationBar, 152, pContext);
 
 	// Merge frame has also a dockable bar at the very bottom
 	// This is not the client area, but we create it now because we want
@@ -238,11 +250,15 @@ BOOL CChildFrame::OnCreateClient( LPCREATESTRUCT /*lpcs*/,
 	// tell merge doc about these views
 	m_pMergeDoc->SetMergeDetailViews(pDetail);
 
+	m_pMergeDoc->SetConflictTextView((CConflictTextView *)pWndConflictTextView);
+
 	m_wndFilePathBar.SetPaneCount(pDoc->m_nBuffers);
 	
 	// Set frame window handles so we can post stage changes back
-	((CLocationView *)pWnd)->SetFrameHwnd(GetSafeHwnd());
+	((CLocationView *)pWndLocationView)->SetFrameHwnd(GetSafeHwnd());
+	((CConflictTextView *)pWndConflictTextView)->SetFrameHwnd(GetSafeHwnd());
 	m_wndLocationBar.SetFrameHwnd(GetSafeHwnd());
+	m_wndConflictBar.SetFrameHwnd(GetSafeHwnd());
 	m_wndDetailBar.SetFrameHwnd(GetSafeHwnd());
 
 	return TRUE;
@@ -301,6 +317,13 @@ int CChildFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		CBRS_SIZE_DYNAMIC | CBRS_ALIGN_LEFT);
 	m_wndLocationBar.EnableDocking(CBRS_ALIGN_LEFT | CBRS_ALIGN_RIGHT);
 	DockControlBar(&m_wndLocationBar, AFX_IDW_DOCKBAR_LEFT);
+
+	// Merge frame also has a dockable bar at the very bottom
+	// created in OnCreateClient 
+	m_wndConflictBar.SetBarStyle(m_wndConflictBar.GetBarStyle() |
+		CBRS_SIZE_DYNAMIC | CBRS_ALIGN_TOP);
+	m_wndConflictBar.EnableDocking(CBRS_ALIGN_TOP | CBRS_ALIGN_BOTTOM);
+	DockControlBar(&m_wndConflictBar, AFX_IDW_DOCKBAR_BOTTOM);
 
 	// Merge frame also has a dockable bar at the very bottom
 	// created in OnCreateClient 
@@ -473,6 +496,7 @@ void CChildFrame::ActivateFrame(int nCmdShow)
 		SetDockState(pDockState);
 	// for the dimensions of the diff and location pane, use the CSizingControlBar loader
 	m_wndLocationBar.LoadState(_T("Settings"));
+	m_wndConflictBar.LoadState(_T("Settings"));
 	m_wndDetailBar.LoadState(_T("Settings"));
 
 	if (bMaximized)
@@ -564,6 +588,7 @@ void CChildFrame::SavePosition()
 	m_pDockState.SaveState(_T("Settings"));
 	// for the dimensions of the diff pane, use the CSizingControlBar save
 	m_wndLocationBar.SaveState(_T("Settings"));
+	m_wndConflictBar.SaveState(_T("Settings"));
 	m_wndDetailBar.SaveState(_T("Settings"));
 
 	int iCol;
@@ -849,6 +874,7 @@ void CChildFrame::UpdateResources()
 	for (int pane = 0; pane < GetMergeDoc()->m_nBuffers; pane++)
 		m_status[pane].UpdateResources();
 	m_wndLocationBar.UpdateResources();
+	m_wndConflictBar.UpdateResources();
 	m_wndDetailBar.UpdateResources();
 }
 

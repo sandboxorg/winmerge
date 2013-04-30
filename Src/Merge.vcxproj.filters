@@ -739,6 +739,15 @@
     <ClCompile Include="JumpList.cpp">
       <Filter>GUI\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ConflictViewBar.cpp">
+      <Filter>GUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConflictTextBuffer.cpp">
+      <Filter>GUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConflictTextView.cpp">
+      <Filter>GUI\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="charsets.h">
@@ -1366,6 +1375,15 @@
       <Filter>GUI\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="JumpList.h">
+      <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConflictViewBar.h">
+      <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConflictTextView.h">
+      <Filter>GUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConflictTextBuffer.h">
       <Filter>GUI\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
