@@ -38,6 +38,7 @@
 #include "DiffContext.h"	// FILE_SAME
 #include "MovedLines.h"
 #include "MergeEditView.h"
+#include "ConflictTextView.h"
 #include "ChildFrm.h"
 #include "DirDoc.h"
 #include "files.h"
@@ -151,6 +152,7 @@ CMergeDoc::CMergeDoc()
 		m_nBufferType[nBuffer] = BUFFER_NORMAL;
 		m_bEditAfterRescan[nBuffer] = false;
 	}
+	m_pConflictTextBuf.reset(new CConflictTextBuffer());
 
 	m_nCurDiff=-1;
 	m_bEnableRescan = true;
@@ -194,6 +196,7 @@ void CMergeDoc::DeleteContents ()
 	CDocument::DeleteContents ();
 	for (int nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
 		m_ptBuf[nBuffer]->FreeAll ();
+	m_pConflictTextBuf->FreeAll ();
 	m_tempFiles[0].Delete();
 	m_tempFiles[1].Delete();
 }
@@ -266,6 +269,8 @@ BOOL CMergeDoc::OnNewDocument()
 	
 	for (int nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
 		m_ptBuf[nBuffer]->InitNew ();
+
+	m_pConflictTextBuf->InitNew ();
 	return true;
 }
 
@@ -590,6 +595,7 @@ int CMergeDoc::Rescan(bool &bBinary, IDENTLEVEL &identical,
 			m_bEditAfterRescan[nBuffer] = false;
 		}
 	}
+	m_pConflictTextView->ReAttachToBuffer();
 
 	GetParentFrame()->SetLastCompareResult(m_diffList.GetSignificantDiffs());
 
@@ -2202,6 +2208,11 @@ void CMergeDoc::SetMergeDetailViews(CMergeEditView * pDetailView[])
 	}
 }
 
+void CMergeDoc::SetConflictTextView(CConflictTextView * pConflictTextView)
+{
+	m_pConflictTextView = pConflictTextView;
+}
+
 /**
  * @brief DirDoc gives us its identity just after it creates us
  */
@@ -2490,6 +2501,8 @@ OPENRESULTS_TYPE CMergeDoc::OpenDocs(FileLocation fileloc[],
 		// Set read-only statuses
 		m_ptBuf[nBuffer]->SetReadOnly(bRO[nBuffer]);
 	}
+
+	m_pConflictTextView->AttachToBuffer();
 
 	// Check the EOL sensitivity option (do it before Rescan)
 	DIFFOPTIONS diffOptions = {0};
