@@ -780,6 +780,8 @@ BEGIN
     PUSHBUTTON      "Help",ID_HELP,402,242,50,14
     GROUPBOX        "Files or Folders to Compare",IDC_FILES_DIRS_GROUP,7,
                     67,452,159
+    CONTROL         "&Merge",IDC_MERGE_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,81,250,181,10
 END
 
 IDD_VSS DIALOGEX 0, 0, 257, 166

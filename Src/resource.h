@@ -485,6 +485,7 @@
 #define IDC_COMPARE_WALKSUBDIRS         1349
 #define IDC_COMPARE_QUICKC_LIMIT        1350
 #define IDC_REPORT_INCLUDEFILECMPREPORT 1351
+#define IDC_MERGE_CHECK                 1352
 #define IDC_EDIT_WHOLE_WORD             8603
 #define IDC_EDIT_MATCH_CASE             8604
 #define IDC_EDIT_FINDTEXT               8605
@@ -946,6 +947,7 @@
 #define ID_VIEW_WHITESPACE              32818
 #define ID_VIEW_DETAIL_BAR              32819
 #define ID_VIEW_LOCATION_BAR            32820
+#define ID_VIEW_CONFLICT_BAR            33189
 #define ID_VIEW_DIR_STATISTICS          32821
 #define ID_VIEW_LANGUAGE                32822
 #define ID_VIEW_LINEDIFFS               32823
@@ -1139,8 +1141,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        239
-#define _APS_NEXT_COMMAND_VALUE         33189
-#define _APS_NEXT_CONTROL_VALUE         1352
+#define _APS_NEXT_COMMAND_VALUE         33190
+#define _APS_NEXT_CONTROL_VALUE         1353
 #define _APS_NEXT_SYMED_VALUE           113
 #endif
 #endif
