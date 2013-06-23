@@ -682,6 +682,8 @@ BOOL CLanguageSelect::LoadLanguageFile(LANGID wLangId)
 				// avoid dereference of empty vector or last vector
 				if (lines.size() > 0)
 				{
+					unslash(0, msgid);
+					m_map_lineno.insert(std::make_pair(msgid, lines[0]));
 					for (unsigned *pline = &*lines.begin() ; pline <= &*(lines.end() - 1) ; ++pline)
 					{
 						unsigned line = *pline;
@@ -756,6 +758,8 @@ BOOL CLanguageSelect::LoadLanguageFile(LANGID wLangId)
 			else
 			{
 				ps = 0;
+				if (!msgid.empty())
+					unslash(0, msgid);
 				if (msgstr.empty())
 					msgstr = msgid;
 				unslash(m_codepage, msgstr);
@@ -790,6 +794,7 @@ BOOL CLanguageSelect::LoadLanguageFile(LANGID wLangId)
 		FreeLibrary(m_hCurrentDll);
 		m_hCurrentDll = 0;
 		m_strarray.clear();
+		m_map_lineno.clear();
 		m_codepage = 0;
 		if (m_hWnd)
 		{
@@ -823,6 +828,7 @@ BOOL CLanguageSelect::SetLanguage(LANGID wLangId)
 		m_hCurrentDll = NULL;
 	}
 	m_strarray.clear();
+	m_map_lineno.clear();
 	m_codepage = 0;
 	if (wLangId != wSourceLangId)
 	{
@@ -935,6 +941,17 @@ bool CLanguageSelect::TranslateString(size_t line, std::wstring &ws) const
 			return true;
 		}
 	}
+	return false;
+}
+
+bool CLanguageSelect::TranslateString(const std::string& str, String &translated_str) const
+{
+	EngLinenoMap::const_iterator it = m_map_lineno.find(str);
+	if (it != m_map_lineno.end())
+	{
+		return TranslateString(it->second, translated_str);
+	}
+	translated_str = ucr::toTString(str);
 	return false;
 }
 

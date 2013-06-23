@@ -106,7 +106,7 @@ void ProjectFilePathsDlg::OnBnClickedProjRfileBrowse()
  */
 void ProjectFilePathsDlg::OnBnClickedProjFilterSelect()
 {
-	String filterPrefix = theApp.LoadString(IDS_FILTER_PREFIX);
+	String filterPrefix = _("[F] ");
 	CString curFilter;
 
 	const BOOL bUseMask = theApp.m_globalFileFilter.IsUsingMask();
@@ -185,7 +185,7 @@ void ProjectFilePathsDlg::OnBnClickedProjSave()
 	if (!m_sFilter.IsEmpty())
 	{
 		// Remove possbile prefix from the filter name
-		String prefix = theApp.LoadString(IDS_FILTER_PREFIX);
+		String prefix = _("[F] ");
 		int ind = m_sFilter.Find(prefix.c_str(), 0);
 		if (ind == 0)
 		{
@@ -240,7 +240,7 @@ CString ProjectFilePathsDlg::AskProjectFileName(BOOL bOpen)
 	String strProjectPath = GetOptionsMgr()->GetString(OPT_PROJECTS_PATH);
 
 	if (!::SelectFile(GetSafeHwnd(), strProjectFileName, strProjectPath.c_str(),
-			NULL, IDS_PROJECTFILES, bOpen))
+			_T(""), _("WinMerge Project Files (*.WinMerge)|*.WinMerge||"), bOpen))
 		return _T("");
 
 	if (strProjectFileName.empty())
@@ -253,7 +253,7 @@ CString ProjectFilePathsDlg::AskProjectFileName(BOOL bOpen)
 	if (extension.empty())
 	{
 		strProjectFileName += _T(".");
-		strProjectFileName += theApp.LoadString(IDS_PROJECTFILES_EXT).c_str();
+		strProjectFileName += _("WinMerge");
 	}
 
 	// get the path part from the filename

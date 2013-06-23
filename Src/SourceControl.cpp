@@ -76,7 +76,7 @@ BOOL CMainFrame::SaveToVersionControl(const String& strSavePath)
 	{
 		// Prompt for user choice
 		CVssPrompt dlg;
-		dlg.m_strMessage = LangFormatString1(IDS_SAVE_FMT, strSavePath.c_str()).c_str();
+		dlg.m_strMessage = string_format_string1(_("Save changes to %1?"), strSavePath).c_str();
 		dlg.m_strProject = m_vssHelper.GetProjectBase().c_str();
 		dlg.m_strUser = m_strVssUser;          // BSP - Add VSS user name to dialog box
 		dlg.m_strPassword = m_strVssPassword;
@@ -94,7 +94,7 @@ BOOL CMainFrame::SaveToVersionControl(const String& strSavePath)
 		// process versioning system specific action
 		if (userChoice == IDOK)
 		{
-			WaitStatusCursor waitstatus(IDS_VSS_CHECKOUT_STATUS);
+			WaitStatusCursor waitstatus(_("Checkout files from VSS..."));
 			m_vssHelper.SetProjectBase((const TCHAR *)dlg.m_strProject);
 			theApp.WriteProfileString(_T("Settings"), _T("VssProject"), m_vssHelper.GetProjectBase().c_str());
 			String path, name;
@@ -139,7 +139,7 @@ BOOL CMainFrame::SaveToVersionControl(const String& strSavePath)
 		CRegKeyEx reg;
 		CString spath, sname;
 
-		dlg.m_strMessage = LangFormatString1(IDS_SAVE_FMT, strSavePath.c_str()).c_str();
+		dlg.m_strMessage = string_format_string1(_("Save changes to %1?"), strSavePath).c_str();
 		dlg.m_strProject = m_vssHelper.GetProjectBase().c_str();
 		dlg.m_strUser = m_strVssUser;          // BSP - Add VSS user name to dialog box
 		dlg.m_strPassword = m_strVssPassword;
@@ -159,7 +159,7 @@ BOOL CMainFrame::SaveToVersionControl(const String& strSavePath)
 		// process versioning system specific action
 		if (userChoice == IDOK)
 		{
-			WaitStatusCursor waitstatus(IDS_VSS_CHECKOUT_STATUS);
+			WaitStatusCursor waitstatus(_("Checkout files from VSS..."));
 			BOOL bOpened = FALSE;
 			m_vssHelper.SetProjectBase((const TCHAR *)dlg.m_strProject);
 			m_strVssUser = dlg.m_strUser;

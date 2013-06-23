@@ -65,32 +65,11 @@ String LoadResString(unsigned id)
 	return theApp.LoadString(id);
 }
 
-/**
- * @brief Lang aware version of AfxFormatStrings()
- */
-String LangFormatStrings(unsigned id, const TCHAR * const *rglpsz, int nString)
+String tr(const std::string &str)
 {
-	String fmt = theApp.LoadString(id);
-	CString str;
-	AfxFormatStrings(str, fmt.c_str(), rglpsz, nString);
-	return (LPCTSTR)str;
-}
-
-/**
- * @brief Lang aware version of AfxFormatString1()
- */
-String LangFormatString1(unsigned id, const TCHAR *lpsz1)
-{
-	return LangFormatStrings(id, &lpsz1, 1);
-}
-
-/**
- * @brief Lang aware version of AfxFormatString2()
- */
-String LangFormatString2(unsigned id, const TCHAR *lpsz1, const TCHAR *lpsz2)
-{
-	const TCHAR *rglpsz[2] = { lpsz1, lpsz2 };
-	return LangFormatStrings(id, rglpsz, 2);
+	String translated_str;
+	theApp.TranslateString(str, translated_str);
+	return translated_str;
 }
 
 void AppErrorMessageBox(const String& msg)

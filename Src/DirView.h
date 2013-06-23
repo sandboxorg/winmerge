@@ -57,6 +57,7 @@ struct DirColInfo;
 class CLoadSaveCodepageDlg;
 class CShellContextMenu;
 class CDiffContext;
+class DirViewColItems;
 
 struct ViewCustomFlags
 {
@@ -209,7 +210,7 @@ public:
 	void UpdateDiffItemStatus(UINT nIdx);
 private:
 	void InitiateSort();
-	void NameColumn(int id, int subitem);
+	void NameColumn(const char* idname, int subitem);
 	int AddNewItem(int i, Poco::UIntPtr diffpos, int iImage, int iIndent);
 	bool IsDefaultSortAscending(int col) const;
 	int ColPhysToLog(int i) const { return m_invcolorder[i]; }
@@ -222,22 +223,9 @@ private:
 	void ClearColumnOrders();
 	void ResetColumnOrdering();
 	void MoveColumn(int psrc, int pdest);
-	String GetColRegValueNameBase(int col) const;
 	String ColGetTextToDisplay(const CDiffContext *pCtxt, int col, const DIFFITEM & di);
 	int ColSort(const CDiffContext *pCtxt, int col, const DIFFITEM & ldi, const DIFFITEM &rdi) const;
 // End DirViewCols.cpp
-
-// Implementation in DirViewColItems.cpp
-	int GetColDefaultOrder(int col) const;
-	const DirColInfo * DirViewColItems_GetDirColInfo(int col) const;
-	bool IsColById(int col, int id) const;
-	bool IsColName(int col) const;
-	bool IsColLmTime(int col) const;
-	bool IsColMmTime(int col) const;
-	bool IsColRmTime(int col) const;
-	bool IsColStatus(int col) const;
-	bool IsColStatusAbbr(int col) const;
-// End DirViewColItems.cpp
 
 private:
 
@@ -304,6 +292,7 @@ protected:
 	boost::scoped_ptr<CShellContextMenu> m_pShellContextMenuRight; /**< Shell context menu for group of right files */
 	HMENU m_hCurrentMenu; /**< Current shell context menu (either left or right) */
 	boost::scoped_ptr<DirViewTreeState> m_pSavedTreeState;
+	boost::scoped_ptr<DirViewColItems> m_pColItems;
 
 	// Generated message map functions
 	afx_msg void OnColumnClick(NMHDR* pNMHDR, LRESULT* pResult);
@@ -453,7 +442,6 @@ private:
 	void OpenParentDirectory();
 	void DoUpdateDirCopyRightToLeft(CCmdUI* pCmdUI, eMenuType menuType);
 	void DoUpdateDirCopyLeftToRight(CCmdUI* pCmdUI, eMenuType menuType);
-	void ModifyPopup(CMenu * pPopup, int nStringResource, int nMenuId, LPCTSTR szPath);
 	void DoUpdateCtxtDirDelLeft(CCmdUI* pCmdUI);
 	void DoUpdateCtxtDirDelRight(CCmdUI* pCmdUI);
 	void DoUpdateCtxtDirDelBoth(CCmdUI* pCmdUI);

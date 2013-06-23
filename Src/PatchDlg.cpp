@@ -147,7 +147,9 @@ void CPatchDlg::OnOK()
 		}
 		if (paths_IsPathAbsolute((LPCTSTR)m_fileResult) == FALSE)
 		{
-			ResMsgBox1(IDS_PATH_NOT_ABSOLUTE, m_fileResult, MB_ICONSTOP);
+			String msg = string_format_string1(_("The specified output path is not an absolute path: %1"),
+				(LPCTSTR)m_fileResult);
+			AfxMessageBox(msg.c_str(), MB_ICONSTOP);
 			m_ctlResult.SetFocus();
 			return;
 		}
@@ -233,17 +235,17 @@ BOOL CPatchDlg::OnInitDialog()
 	else if (count > 1)	// Multiple files added, show number of files
 	{
 		String num = string_format(_T("%d"), count);
-		String msg = LangFormatString1(IDS_DIFF_SELECTEDFILES, num.c_str());
+		String msg = string_format_string1(_("[%1 files selected]"), num);
 		m_file1 = msg.c_str();
 		m_file2 = msg.c_str();
 	}
 	UpdateData(FALSE);
 
 	// Add patch styles to combobox
-	m_comboStyle.AddString(theApp.LoadString(IDS_DIFF_NORMAL).c_str());
-	m_comboStyle.AddString(theApp.LoadString(IDS_DIFF_CONTEXT).c_str());
-	m_comboStyle.AddString(theApp.LoadString(IDS_DIFF_UNIFIED).c_str());
-	m_comboStyle.AddString(theApp.LoadString(IDS_DIFF_HTML).c_str());
+	m_comboStyle.AddString(_("Normal").c_str());
+	m_comboStyle.AddString(_("Context").c_str());
+	m_comboStyle.AddString(_("Unified").c_str());
+	m_comboStyle.AddString(_("HTML").c_str());
 
 	m_outputStyle = OUTPUT_NORMAL;
 	m_comboStyle.SetCurSel(0);
@@ -273,7 +275,7 @@ void CPatchDlg::OnDiffBrowseFile1()
 	String folder;
 
 	folder = m_file1;
-	if (SelectFile(GetSafeHwnd(), s, folder.c_str(), IDS_OPEN_TITLE, NULL, TRUE))
+	if (SelectFile(GetSafeHwnd(), s, folder.c_str(), _("Open"), _T(""), TRUE))
 	{
 		ChangeFile(s.c_str(), TRUE);
 		m_ctlFile1.SetWindowText(s.c_str());
@@ -289,7 +291,7 @@ void CPatchDlg::OnDiffBrowseFile2()
 	String folder;
 
 	folder = m_file2;
-	if (SelectFile(GetSafeHwnd(), s, folder.c_str(), IDS_OPEN_TITLE, NULL, TRUE))
+	if (SelectFile(GetSafeHwnd(), s, folder.c_str(), _("Open"), _T(""), TRUE))
 	{
 		ChangeFile(s.c_str(), FALSE);
 		m_ctlFile2.SetWindowText(s.c_str());
@@ -343,7 +345,7 @@ void CPatchDlg::OnDiffBrowseResult()
 	String folder;
 
 	folder = m_fileResult;
-	if (SelectFile(GetSafeHwnd(), s, folder.c_str(), IDS_SAVE_AS_TITLE, NULL, FALSE))
+	if (SelectFile(GetSafeHwnd(), s, folder.c_str(), _("Save As"), _T(""), FALSE))
 	{
 		m_fileResult = s.c_str();
 		m_ctlResult.SetWindowText(s.c_str());
@@ -490,16 +492,16 @@ void CPatchDlg::UpdateSettings()
 	switch (m_outputStyle)
 	{
 	case DIFF_OUTPUT_NORMAL:
-		m_comboStyle.SelectString(-1, theApp.LoadString(IDS_DIFF_NORMAL).c_str());
+		m_comboStyle.SelectString(-1, _("Normal").c_str());
 		break;
 	case DIFF_OUTPUT_CONTEXT:
-		m_comboStyle.SelectString(-1, theApp.LoadString(IDS_DIFF_CONTEXT).c_str());
+		m_comboStyle.SelectString(-1, _("Context").c_str());
 		break;
 	case DIFF_OUTPUT_UNIFIED:
-		m_comboStyle.SelectString(-1, theApp.LoadString(IDS_DIFF_UNIFIED).c_str());
+		m_comboStyle.SelectString(-1, _("Unified").c_str());
 		break;
 	case DIFF_OUTPUT_HTML:
-		m_comboStyle.SelectString(-1, theApp.LoadString(IDS_DIFF_HTML).c_str());
+		m_comboStyle.SelectString(-1, _("HTML").c_str());
 		break;
 	}
 
