@@ -34,6 +34,7 @@
 #include "OptionsDef.h"
 #include "OptionsMgr.h"
 #include "OptionsPanel.h"
+#include "SourceControl.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -125,11 +126,11 @@ BOOL PropVss::OnInitDialog()
 void PropVss::OnSelendokVerSys() 
 {
 	UpdateData(TRUE);
-	String tempStr = theApp.LoadString(m_nVerSys == VCS_CLEARCASE ? IDS_CC_CMD : IDS_VSS_CMD);
+	String tempStr = m_nVerSys == SourceControl::VCS_CLEARCASE ? _("&Path to cleartool.exe:") : _("&Path to SS.EXE:");
 	m_ctlVssL1.SetWindowText(tempStr.c_str());
-	m_ctlPath.EnableWindow(m_nVerSys == VCS_VSS4 || m_nVerSys == VCS_CLEARCASE);
-	m_ctlVssL1.EnableWindow(m_nVerSys == VCS_VSS4 || m_nVerSys == VCS_CLEARCASE);
-	m_ctlBrowse.EnableWindow(m_nVerSys == VCS_VSS4 || m_nVerSys == VCS_CLEARCASE);
+	m_ctlPath.EnableWindow(m_nVerSys == SourceControl::VCS_VSS4 || m_nVerSys == SourceControl::VCS_CLEARCASE);
+	m_ctlVssL1.EnableWindow(m_nVerSys == SourceControl::VCS_VSS4 || m_nVerSys == SourceControl::VCS_CLEARCASE);
+	m_ctlBrowse.EnableWindow(m_nVerSys == SourceControl::VCS_VSS4 || m_nVerSys == SourceControl::VCS_CLEARCASE);
 }
 
 /**
@@ -145,8 +146,8 @@ void PropVss::LoadVssOptionStrings()
 	VCS_CLEARCASE,
 	*/
 
-	m_ctlVerSys.AddString(theApp.LoadString(IDS_VCS_NONE).c_str());
-	m_ctlVerSys.AddString(theApp.LoadString(IDS_VCS_VSS4).c_str());
-	m_ctlVerSys.AddString(theApp.LoadString(IDS_VCS_VSS5).c_str());
-	m_ctlVerSys.AddString(theApp.LoadString(IDS_VCS_CLEARCASE).c_str());
+	m_ctlVerSys.AddString(_("None").c_str());
+	m_ctlVerSys.AddString(_("Visual SourceSafe (less than 5.0)").c_str());
+	m_ctlVerSys.AddString(_("Visual SourceSafe (5.0 and above)").c_str());
+	m_ctlVerSys.AddString(_("Rational ClearCase").c_str());
 }

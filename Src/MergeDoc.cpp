@@ -260,7 +260,7 @@ BOOL CMergeDoc::OnNewDocument()
 	if (!CDocument::OnNewDocument())
 		return false;
 
-	SetTitle(theApp.LoadString(IDS_FILE_COMPARISON_TITLE).c_str());
+	SetTitle(_("File Comparison").c_str());
 	
 	for (int nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
 		m_ptBuf[nBuffer]->InitNew ();
@@ -440,7 +440,7 @@ int CMergeDoc::Rescan(bool &bBinary, IDENTLEVEL &identical,
 	{
 		if (FileChanged[nBuffer] == FileRemoved)
 		{
-			String msg = LangFormatString1(IDS_FILE_DISAPPEARED, m_filePaths[nBuffer].c_str());
+			String msg = string_format_string1(_("The file\n%1\nhas disappeared. Please save a copy of the file to continue."), m_filePaths[nBuffer]);
 			AfxMessageBox(msg.c_str(), MB_ICONWARNING);
 			bool bSaveResult = false;
 			bool ok = DoSaveAs(m_filePaths[nBuffer].c_str(), bSaveResult, nBuffer);
@@ -612,7 +612,7 @@ void CMergeDoc::CheckFileChanged(void)
 	{
 		if (FileChange[nBuffer] == FileChanged)
 		{
-			String msg = LangFormatString1(IDS_FILECHANGED_RESCAN, m_filePaths[nBuffer].c_str());
+			String msg = string_format_string1(_("Another application has updated file\n%1\nsince WinMerge scanned it last time.\n\nDo you want to reload the file?"), m_filePaths[nBuffer]);
 			if (AfxMessageBox(msg.c_str(), MB_YESNO | MB_ICONWARNING) == IDYES)
 			{
 				OnFileReload();
@@ -720,7 +720,7 @@ void CMergeDoc::ShowRescanError(int nRescanResult, IDENTLEVEL identical)
 
 	if (nRescanResult == RESCAN_FILE_ERR)
 	{
-		s = theApp.LoadString(IDS_FILEERROR);
+		s = _("An error occurred while comparing the files.");
 		LogErrorString(s);
 		AfxMessageBox(s.c_str(), MB_ICONSTOP);
 		return;
@@ -728,7 +728,7 @@ void CMergeDoc::ShowRescanError(int nRescanResult, IDENTLEVEL identical)
 
 	if (nRescanResult == RESCAN_TEMP_ERR)
 	{
-		s = theApp.LoadString(IDS_TEMP_FILEERROR);
+		s = _("Temporary files could not be created. Check your temporary path settings.");
 		LogErrorString(s);
 		AfxMessageBox(s.c_str(), MB_ICONSTOP);
 		return;
@@ -741,7 +741,7 @@ void CMergeDoc::ShowRescanError(int nRescanResult, IDENTLEVEL identical)
 			m_filePaths.GetLeft() == m_filePaths.GetRight() && m_filePaths.GetMiddle() == m_filePaths.GetRight())
 		{
 			// compare file to itself, a custom message so user may hide the message in this case only
-			s = theApp.LoadString(IDS_FILE_TO_ITSELF);
+			s = _("The same file is opened in both panels.");
 			AfxMessageBox(s.c_str(), MB_ICONINFORMATION | MB_DONT_DISPLAY_AGAIN, IDS_FILE_TO_ITSELF);
 		}
 		else if (identical == IDENTLEVEL_ALL)
@@ -1093,7 +1093,7 @@ bool CMergeDoc::TrySaveAs(String &strPath, int &nSaveResult, String & sError,
 	String s;
 	String str;
 	String strSavePath; // New path for next saving try
-	UINT titleid = 0;
+	String title;
 	bool result = true;
 	int answer = IDOK; // Set default we use for scratchpads
 	int nActiveViewIndexType = GetActiveMergeViewIndexType();
@@ -1118,20 +1118,26 @@ bool CMergeDoc::TrySaveAs(String &strPath, int &nSaveResult, String & sError,
 	{
 		if (m_nBuffers == 3)
 		{
-			str = LangFormatString2(IDS_FILEPACK_FAILED_LEFT + nBuffer,
-				strPath.c_str(), pInfoTempUnpacker->pluginName.c_str());
+			str = string_format_string2(
+				nBuffer == 0 ? 
+					_("Plugin '%2' cannot pack your changes to the left file back into '%1'.\n\nThe original file will not be changed.\n\nDo you want to save the unpacked version to another file?")
+					: (nBuffer == 1 ? 
+					_("Plugin '%2' cannot pack your changes to the middle file back into '%1'.\n\nThe original file will not be changed.\n\nDo you want to save the unpacked version to another file?"): 
+					_("Plugin '%2' cannot pack your changes to the right file back into '%1'.\n\nThe original file will not be changed.\n\nDo you want to save the unpacked version to another file?")),
+				strPath, pInfoTempUnpacker->pluginName);
 		}
 		else
 		{
-			str = LangFormatString2(nBuffer == 0 ? IDS_FILEPACK_FAILED_LEFT : IDS_FILEPACK_FAILED_RIGHT,
-				strPath.c_str(), pInfoTempUnpacker->pluginName.c_str());
+			str = string_format_string2(nBuffer == 0 ? _("Plugin '%2' cannot pack your changes to the left file back into '%1'.\n\nThe original file will not be changed.\n\nDo you want to save the unpacked version to another file?") : 
+				_("Plugin '%2' cannot pack your changes to the right file back into '%1'.\n\nThe original file will not be changed.\n\nDo you want to save the unpacked version to another file?"),
+				strPath, pInfoTempUnpacker->pluginName);
 		}
 		// replace the unpacker with a "do nothing" unpacker
 		pInfoTempUnpacker->Initialize(PLUGIN_MANUAL);
 	}
 	else
 	{
-		str = LangFormatString2(IDS_FILESAVE_FAILED, strPath.c_str(), sError.c_str());
+		str = string_format_string2(_("Saving file failed.\n%1\n%2\nDo you want to:\n\t-use a different filename (Press Ok)\n\t-abort the current operation (Press Cancel)?"), strPath, sError);
 	}
 
 	// SAVE_NO_FILENAME is temporarily used for scratchpad.
@@ -1143,13 +1149,13 @@ bool CMergeDoc::TrySaveAs(String &strPath, int &nSaveResult, String & sError,
 	{
 	case IDOK:
 		if (nBuffer == 0)
-			titleid = IDS_SAVE_LEFT_AS;
+			title = _("Save Left File As");
 		else if (nBuffer == m_nBuffers - 1)
-			titleid = IDS_SAVE_RIGHT_AS;
+			title = _("Save Right File As");
 		else
-			titleid = IDS_SAVE_MIDDLE_AS;
+			title = _("Save Middle File As");
 
-		if (SelectFile(parent, s, strPath.c_str(), titleid, NULL, false))
+		if (SelectFile(parent, s, strPath.c_str(), title, _T(""), false))
 		{
 			CDiffTextBuffer *pBuffer = m_ptBuf[nBuffer].get();
 			strSavePath = s;
@@ -1214,7 +1220,7 @@ bool CMergeDoc::DoSave(LPCTSTR szPath, bool &bSaveSuccess, int nBuffer)
 	fileChanged = IsFileChangedOnDisk(szPath, fileInfo, true, nBuffer);
 	if (fileChanged == FileChanged)
 	{
-		String msg = LangFormatString1(IDS_FILECHANGED_ONDISK, szPath);
+		String msg = string_format_string1(_("Another application has updated file\n%1\nsince WinMerge loaded it.\n\nOverwrite changed file?"), szPath);
 		if (AfxMessageBox(msg.c_str(), MB_ICONWARNING | MB_YESNO) == IDNO)
 		{
 			bSaveSuccess = true;
@@ -1238,9 +1244,7 @@ bool CMergeDoc::DoSave(LPCTSTR szPath, bool &bSaveSuccess, int nBuffer)
 			String sname;
 			paths_SplitFilename(szPath, 0, &sname, 0);
 			strSavePath = GetMainFrame()->m_strSaveAsPath;
-			if (GetMainFrame()->m_strSaveAsPath.Right(1) != _T('\\'))
-				strSavePath += _T('\\');
-			strSavePath += sname;
+			strSavePath = paths_ConcatPath(strSavePath, sname);
 		}
 		else
 			strSavePath = GetMainFrame()->m_strSaveAsPath;	
@@ -1501,7 +1505,7 @@ void CMergeDoc::FlushAndRescan(bool bForced /* =false */)
 	if (!bForced)
 		if (!m_bEnableRescan) return;
 
-	WaitStatusCursor waitstatus(IDS_STATUS_RESCANNING);
+	WaitStatusCursor waitstatus(_("Scanning files..."));
 
 	int nActiveViewIndexType = GetActiveMergeViewIndexType();
 
@@ -1719,13 +1723,13 @@ void CMergeDoc::OnUpdateStatusNum(CCmdUI* pCmdUI)
 	
 	// Files are identical - show text "Identical"
 	if (nDiffs <= 0)
-		s = theApp.LoadString(IDS_IDENTICAL);
+		s = _("Identical");
 	
 	// There are differences, but no selected diff
 	// - show amount of diffs
 	else if (GetCurrentDiff() < 0)
 	{
-		s = theApp.LoadString(nDiffs == 1 ? IDS_1_DIFF_FOUND : IDS_NO_DIFF_SEL_FMT);
+		s = nDiffs == 1 ? _("1 Difference Found") : _("%1 Differences Found");
 		string_replace(s, _T("%1"), _itot(nDiffs, sCnt, 10));
 	}
 	
@@ -1733,7 +1737,7 @@ void CMergeDoc::OnUpdateStatusNum(CCmdUI* pCmdUI)
 	// - show diff number and amount of diffs
 	else
 	{
-		s = theApp.LoadString(IDS_DIFF_NUMBER_STATUS_FMT);
+		s = _("Difference %1 of %2");
 		const int signInd = m_diffList.GetSignificantIndex(GetCurrentDiff());
 		string_replace(s, _T("%1"), _itot(signInd + 1, sIdx, 10));
 		string_replace(s, _T("%2"), _itot(nDiffs, sCnt, 10));
@@ -2281,14 +2285,14 @@ int CMergeDoc::LoadFile(CString sFileName, int nBuffer, bool & readOnly, const F
 	{
 		// Error from Unifile/system
 		if (!sOpenError.IsEmpty())
-			sError = LangFormatString2(IDS_ERROR_FILEOPEN, sFileName, sOpenError);
+			sError = string_format_string2(_("Cannot open file\n%1\n\n%2"), (LPCTSTR)sFileName, (LPCTSTR)sOpenError);
 		else
-			sError = LangFormatString1(IDS_ERROR_FILE_NOT_FOUND, sFileName);
+			sError = string_format_string1(_("File not found: %1"), (LPCTSTR)sFileName);
 		AfxMessageBox(sError.c_str(), MB_OK | MB_ICONSTOP | MB_MODELESS);
 	}
 	else if (FileLoadResult::IsErrorUnpack(retVal))
 	{
-		sError = LangFormatString1(IDS_ERROR_FILE_NOT_UNPACKED, sFileName);
+		sError = string_format_string1(_("File not unpacked: %1"), (LPCTSTR)sFileName);
 		AfxMessageBox(sError.c_str(), MB_OK | MB_ICONSTOP | MB_MODELESS);
 	}
 	return retVal;
@@ -3016,10 +3020,10 @@ void CMergeDoc::UpdateResources()
 	CString str;
 	int nBuffer;
 
-	m_strDesc[0] = theApp.LoadString(IDS_EMPTY_LEFT_FILE);
-	m_strDesc[m_nBuffers - 1] = theApp.LoadString(IDS_EMPTY_RIGHT_FILE);
+	m_strDesc[0] = _("Untitled left");
+	m_strDesc[m_nBuffers - 1] = _("Untitled right");
 	if (m_nBuffers == 3)
-		m_strDesc[1] = theApp.LoadString(IDS_EMPTY_MIDDLE_FILE);
+		m_strDesc[1] = _("Untitled middle");
 	for (nBuffer = 0; nBuffer < m_nBuffers; nBuffer++)
 		UpdateHeaderPath(nBuffer);
 
@@ -3237,7 +3241,9 @@ bool CMergeDoc::GenerateReport(LPCTSTR szFileName)
 	if (!file.Open(szFileName, _T("wt")))
 	{
 		String errMsg = GetSysError(GetLastError());
-		ResMsgBox1(IDS_REPORT_ERROR, errMsg.c_str(), MB_OK | MB_ICONSTOP);
+		String msg = string_format_string1(
+			_("Error creating the report:\n%1"), errMsg);
+		AfxMessageBox(msg.c_str(), MB_OK | MB_ICONSTOP);
 		return false;
 	}
 
@@ -3385,7 +3391,7 @@ void CMergeDoc::OnToolsGenerateReport()
 	String s;
 	CString folder;
 
-	if (!SelectFile(GetMainFrame()->GetSafeHwnd(), s, folder, IDS_SAVE_AS_TITLE, IDS_HTML_REPORT_FILES, false, _T("htm")))
+	if (!SelectFile(GetMainFrame()->GetSafeHwnd(), s, folder, _("Save As"), _("HTML Files (*.htm,*.html)|*.htm;*.html|All Files (*.*)|*.*||"), false, _T("htm")))
 		return;
 
 	GenerateReport(s.c_str());

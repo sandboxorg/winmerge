@@ -133,8 +133,8 @@ BOOL PropEditor::OnInitDialog()
 void PropEditor::LoadBreakTypeStrings()
 {
 	CComboBox * cbo = (CComboBox *)GetDlgItem(IDC_BREAK_TYPE);
-	cbo->AddString(theApp.LoadString(IDS_BREAK_ON_WHITESPACE).c_str());
-	cbo->AddString(theApp.LoadString(IDS_BREAK_ON_PUNCTUATION).c_str());
+	cbo->AddString(_("Break at whitespace").c_str());
+	cbo->AddString(_("Break at whitespace or punctuation").c_str());
 }
 
 /**
@@ -176,12 +176,14 @@ void PropEditor::OnEnKillfocusTabEdit()
 	CEdit * pEdit = (CEdit *)GetDlgItem(IDC_TAB_EDIT);
 	CString valueAsText;
 	pEdit->GetWindowText(valueAsText);
-	int value = _ttoi(valueAsText);
+	int value = 0;
+	try { value = string_stoi(static_cast<const TCHAR *>(valueAsText)); } catch (...) {};
 	
 	if (value < 1 || value > MAX_TABSIZE)
 	{
 		String num = string_format(_T("%d"), MAX_TABSIZE);
-		String msg = LangFormatString1(IDS_OPTIONS_INVALID_TABSIZE, num.c_str());
+		String msg = string_format_string1(
+			_("Value in Tab size -field is not in range WinMerge accepts.\n\nPlease use values 1 - %1."), num);
 		AfxMessageBox(msg.c_str(), MB_ICONWARNING);
 	}
 }

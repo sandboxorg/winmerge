@@ -371,14 +371,14 @@ void CHexMergeDoc::DoFileSaveAs(int nBuffer)
 {
 	const String &path = m_filePaths.GetPath(nBuffer);
 	String strPath;
-	int id;
+	String title;
 	if (nBuffer == 0)
-		id = IDS_SAVE_LEFT_AS;
+		title = _("Save Left File As");
 	else if (nBuffer == m_nBuffers - 1)
-		id = IDS_SAVE_RIGHT_AS;
+		title = _("Save Right File As");
 	else
-		id = IDS_SAVE_MIDDLE_AS;
-	if (SelectFile(GetMainFrame()->GetSafeHwnd(), strPath, path.c_str(), id, NULL, FALSE))
+		title = _("Save Middle File As");
+	if (SelectFile(GetMainFrame()->GetSafeHwnd(), strPath, path.c_str(), title, _T(""), FALSE))
 	{
 		if (Try(m_pView[nBuffer]->SaveFile(strPath.c_str())) == IDCANCEL)
 			return;
@@ -558,7 +558,7 @@ void CHexMergeDoc::UpdateHeaderPath(int pane)
 	}
 	if (m_pView[pane]->GetModified())
 		sText.insert(0, _T("* "));
-	pf->GetHeaderInterface()->SetText(pane, sText.c_str());
+	pf->GetHeaderInterface()->SetText(pane, sText);
 
 	SetTitle(NULL);
 }
