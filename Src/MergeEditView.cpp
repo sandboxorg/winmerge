@@ -2959,7 +2959,7 @@ void CMergeEditView::OnWMGoto()
 	nLastLine = pDoc->m_ptBuf[m_nThisPane]->ComputeRealLine(nLineCount - 1);
 
 	// Set active file and current line selected in dialog
-	dlg.m_strParam.Format(_T("%d"), nRealLine + 1);
+	dlg.m_strParam = string_format(_T("%d"), nRealLine + 1);
 	dlg.m_nFile = (pDoc->m_nBuffers < 3) ? (m_nThisPane == 1 ? 2 : 0) : m_nThisPane;
 	dlg.m_nGotoWhat = 0;
 
@@ -2972,7 +2972,7 @@ void CMergeEditView::OnWMGoto()
 		pCurrentView = GetGroupView(m_nThisPane);
 
 		int num = 0;
-		try { num = string_stoi(static_cast<const TCHAR *>(dlg.m_strParam)); } catch(...) {}
+		try { num = string_stoi(dlg.m_strParam) - 1; } catch(...) {}
 
 		if (dlg.m_nGotoWhat == 0)
 		{
