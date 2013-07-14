@@ -17,6 +17,7 @@
 #include "OptionsFont.h"
 #include "DiffWrapper.h" // CMP_CONTENT
 #include "unicoder.h"
+#include "SourceControl.h"
 
 // Functions to copy values set by installer from HKLM to HKCU.
 static void CopyHKLMValues();
@@ -151,8 +152,11 @@ void CMergeApp::OptionsInit()
 	else
 		m_pOptions->InitOption(OPT_CP_DETECT, (int)(50001 << 16) | 3);
 
-	m_pOptions->InitOption(OPT_VCS_SYSTEM, VCS_NONE);
+	m_pOptions->InitOption(OPT_VCS_SYSTEM, SourceControl::VCS_NONE);
 	m_pOptions->InitOption(OPT_VSS_PATH, _T(""));
+	m_pOptions->InitOption(OPT_VSS_DATABASE, _T(""));
+	m_pOptions->InitOption(OPT_VSS_PROJECT, _T(""));
+	m_pOptions->InitOption(OPT_VSS_USER, _T(""));
 
 	m_pOptions->InitOption(OPT_ARCHIVE_ENABLE, 1); // Enable by default
 	m_pOptions->InitOption(OPT_ARCHIVE_PROBETYPE, false);

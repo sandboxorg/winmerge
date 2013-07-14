@@ -74,5 +74,10 @@ String string_trim_ws_end(const String & str);
 // Formatting
 String string_format_arg_list(const TCHAR *fmt, va_list args);
 String string_format(const TCHAR *fmt, ...);
+String string_format_strings(const String& fmt, const String *args[], size_t nargs);
+String string_format_string1(const String& fmt, const String& arg1);
+String string_format_string2(const String& fmt, const String& arg1, const String& arg2);
+
+int string_stoi(const String& str, size_t *idx = 0, int base = 10);
 
 #endif // _UNICODE_STRING_

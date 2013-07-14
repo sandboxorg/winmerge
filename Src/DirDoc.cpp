@@ -29,7 +29,6 @@
 //
 
 #include "StdAfx.h"
-#include <shlwapi.h>		// PathFindFileName()
 #include <Poco/StringTokenizer.h>
 #include "Merge.h"
 #include "HexMergeDoc.h"
@@ -42,7 +41,7 @@
 #include "MainFrm.h"
 #include "coretools.h"
 #include "paths.h"
-#include "WaitStatusCursor.h"
+#include "CustomStatusCursor.h"
 #include "7zCommon.h"
 #include "OptionsDef.h"
 #include "OptionsDiffOptions.h"
@@ -189,7 +188,7 @@ void CDirDoc::InitCompare(const PathContext & paths, bool bRecursive, CTempPathC
 
 	m_pCtxt.reset(new CDiffContext(paths,
 			GetOptionsMgr()->GetInt(OPT_CMP_METHOD)));
-	m_pCtxt->m_bRecursive = !!bRecursive;
+	m_pCtxt->m_bRecursive = bRecursive;
 
 	if (pTempPathContext)
 	{
@@ -232,9 +231,9 @@ CDirDoc::AllowUpwardDirectory(PathContext &pathsParent)
 	// If we have temp context it means we are comparing archives
 	if (IsArchiveFolders())
 	{
-		LPCTSTR name0 = PathFindFileName(path0.c_str());
-		LPCTSTR name1 = PathFindFileName(path1.c_str());
-		LPCTSTR name2 = (m_nDirs > 2) ? PathFindFileName(path2.c_str()) : NULL;
+		String name0 = paths_FindFileName(path0);
+		String name1 = paths_FindFileName(path1);
+		String name2 = (m_nDirs > 2) ? paths_FindFileName(path2) : _T("");
 
 		/* FIXME: for 3way diff*/
 		String::size_type cchLeftRoot = m_pTempPathContext->m_strRoot[0].length();
@@ -253,14 +252,14 @@ CDirDoc::AllowUpwardDirectory(PathContext &pathsParent)
 			pathsParent[1] = m_pTempPathContext->m_strDisplayRoot[1];
 			if (!m_pCtxt->m_piFilterGlobal->includeFile(pathsParent[0].c_str(), pathsParent[1].c_str()))
 				return AllowUpwardDirectory::Never;
-			if (lstrcmpi(name0, _T("ORIGINAL")) == 0 && lstrcmpi(name1, _T("ALTERED")) == 0)
+			if (string_compare_nocase(name0, _T("ORIGINAL")) == 0 && string_compare_nocase(name1, _T("ALTERED")) == 0)
 			{
 				pathsParent[0] = paths_GetParentPath(pathsParent[0]);
 				pathsParent[1] = paths_GetParentPath(pathsParent[1]);
 			}
-			name0 = PathFindFileName(pathsParent[0].c_str());
-			name1 = PathFindFileName(pathsParent[1].c_str());
-			if (lstrcmpi(name0, name1) == 0)
+			name0 = paths_FindFileName(pathsParent[0]);
+			name1 = paths_FindFileName(pathsParent[1]);
+			if (string_compare_nocase(name0, name1) == 0)
 			{
 				pathsParent[0] = paths_GetParentPath(pathsParent[0]);
 				pathsParent[1] = paths_GetParentPath(pathsParent[1]);
@@ -362,7 +361,7 @@ void CDirDoc::Rescan()
 	m_pCtxt->m_bWalkUniques = GetOptionsMgr()->GetBool(OPT_CMP_WALK_UNIQUE_DIRS);
 	m_pCtxt->m_bIgnoreReparsePoints = GetOptionsMgr()->GetBool(OPT_CMP_IGNORE_REPARSE_POINTS);
 	m_pCtxt->m_pCompareStats = m_pCompareStats.get();
-	m_pCtxt->m_bRecursive = !!m_bRecursive;
+	m_pCtxt->m_bRecursive = m_bRecursive;
 
 	// Set total items count since we don't collect items
 	if (m_bMarkedRescan)
@@ -373,7 +372,7 @@ void CDirDoc::Rescan()
 	{
 		UpdateHeaderPath(nIndex);
 		// draw the headers as active ones
-		pf->GetHeaderInterface()->SetActive(nIndex, TRUE);
+		pf->GetHeaderInterface()->SetActive(nIndex, true);
 	}
 	pf->GetHeaderInterface()->Resize();
 
@@ -917,7 +916,7 @@ void CDirDoc::UpdateHeaderPath(int nIndex)
 		ApplyDisplayRoot(nIndex, sText);
 	}
 
-	pf->GetHeaderInterface()->SetText(nIndex, sText.c_str());
+	pf->GetHeaderInterface()->SetText(nIndex, sText);
 }
 
 /**
@@ -1092,7 +1091,7 @@ void CDirDoc::SetTitle(LPCTSTR lpszTitle)
 		m_pCtxt->GetRightPath().empty() || 
 		(m_nDirs > 2 && m_pCtxt->GetMiddlePath().empty()))
 	{
-		String title = theApp.LoadString(IDS_DIRECTORY_WINDOW_TITLE);
+		String title = _("Folder Comparison Results");
 		CDocument::SetTitle(title.c_str());
 	}
 	else
@@ -1104,7 +1103,7 @@ void CDirDoc::SetTitle(LPCTSTR lpszTitle)
 		{
 			String strPath = m_pCtxt->GetPath(index);
 			ApplyDisplayRoot(index, strPath);
-			sDirName[index] = PathFindFileName(strPath.c_str());
+			sDirName[index] = paths_FindFileName(strPath);
 		}
 		if (m_nDirs < 3)
 		{

@@ -30,7 +30,7 @@
 #include "version.h"
 #include "paths.h"
 #include "Environment.h"
-
+#include "DDXHelper.h"
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 	//{{AFX_MSG_MAP(CAboutDlg)
@@ -70,11 +70,11 @@ BOOL CAboutDlg::OnInitDialog()
 
 	CVersionInfo version(AfxGetResourceHandle());
 	String sVersion = version.GetProductVersion();
-	m_strVersion = LangFormatString1(IDS_VERSION_FMT, sVersion.c_str()).c_str();
+	m_strVersion = string_format_string1(_("Version %1"), sVersion);
 
 #ifdef _UNICODE
 	m_strVersion += _T(" ");
-	m_strVersion += theApp.LoadString(IDS_UNICODE).c_str();
+	m_strVersion += _("Unicode");
 #endif
 
 #if defined _M_IX86
@@ -83,14 +83,13 @@ BOOL CAboutDlg::OnInitDialog()
 	m_strVersion += _T(" IA64");
 #elif defined _M_X64
 	m_strVersion += _T(" ");
-	m_strVersion += theApp.LoadString(IDS_WINX64).c_str();
+	m_strVersion += _("X64").c_str();
 #endif
 
 	String sPrivateBuild = version.GetPrivateBuild();
 	if (!sPrivateBuild.empty())
 	{
-		m_strPrivateBuild = LangFormatString1(IDS_PRIVATEBUILD_FMT,
-			sPrivateBuild.c_str()).c_str();
+		m_strPrivateBuild = string_format_string1(_("Private Build: %1"), sPrivateBuild);
 	}
 
 	String copyright = version.GetLegalCopyright();
@@ -111,7 +110,7 @@ void CAboutDlg::OnBnClickedOpenContributors()
 {
 	String defPath = env_GetProgPath();
 	// Don't add quotation marks yet, CFile doesn't like them
-	String docPath = defPath + ContributorsPath;
+	String docPath = paths_ConcatPath(defPath, ContributorsPath);
 	HINSTANCE ret = 0;
 	
 	if (paths_DoesPathExist(docPath) == IS_EXISTING_FILE)
@@ -128,11 +127,17 @@ void CAboutDlg::OnBnClickedOpenContributors()
 			// Try to open with associated application (.txt)
 			ret = ShellExecute(m_hWnd, _T("open"), docPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 			if ((int)ret < 32)
-				ResMsgBox1(IDS_ERROR_EXECUTE_FILE, _T("Notepad.exe"), MB_ICONSTOP);
+			{
+				String msg = string_format_string1(_("Failed to execute external editor: %1"), _T("Notepad.exe"));
+				AfxMessageBox(msg.c_str(), MB_ICONSTOP);
+			}
 		}
 	}
 	else
-		ResMsgBox1(IDS_ERROR_FILE_NOT_FOUND, docPath.c_str(), MB_ICONSTOP);
+	{
+		String msg = string_format_string1(_("File not found: %1"), docPath);
+		AfxMessageBox(msg.c_str(), MB_ICONSTOP);
+	}
 }
 
 

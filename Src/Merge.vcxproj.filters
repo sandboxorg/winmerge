@@ -202,9 +202,6 @@
     <ClCompile Include="Common\ShellFileOperations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ssapi.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stringdiffs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -748,6 +745,9 @@
     <ClCompile Include="Common\DragDrop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CustomStatusCursor.cpp">
+      <Filter>MFCGui\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="charsets.h">
@@ -928,9 +928,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Common\ShellFileOperations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ssapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stringdiffs.h">
@@ -1370,6 +1367,21 @@
     </ClInclude>
     <ClInclude Include="Common\DragDrop.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ssauto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\MyCom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceControl.h">
+      <Filter>MFCGui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DDXHelper.h">
+      <Filter>MFCGui\Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomStatusCursor.h">
+      <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

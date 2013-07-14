@@ -17,6 +17,7 @@
 #include "UnicodeString.h"
 #include "DirItem.h"
 #include "unicoder.h"
+#include "paths.h"
 
 using Poco::DirectoryIterator;
 using Poco::Timestamp;
@@ -84,12 +85,7 @@ static void LoadFiles(const String& sDir, DirItemArray * dirs, DirItemArray * fi
 	}
 
 #else
-	String sPattern(sDir);
-	size_t len = sPattern.length();
-	if (sPattern[len - 1] != '\\')
-		sPattern += _T("\\*.*");
-	else
-        sPattern += _T("*.*");
+	String sPattern = paths_ConcatPath(sDir, _T("*.*"));
 
 	WIN32_FIND_DATA ff;
 	HANDLE h = FindFirstFile(sPattern.c_str(), &ff);
@@ -102,7 +98,7 @@ static void LoadFiles(const String& sDir, DirItemArray * dirs, DirItemArray * fi
 				continue;
 
 			DirItem ent;
-			ent.bIsDir = !!bIsDirectory;
+			ent.bIsDir = bIsDirectory;
 
 			// Save filetimes as seconds since January 1, 1970
 			// Note that times can be < 0 if they are around that 1970..

@@ -129,14 +129,14 @@ void FileFiltersDlg::InitList()
 	// Also enable infotips.
 	m_listFilters.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	String title = theApp.LoadString(IDS_FILTERFILE_NAMETITLE);
+	String title = _("Name");
 	m_listFilters.InsertColumn(0, title.c_str(), LVCFMT_LEFT, 150);
-	title = theApp.LoadString(IDS_FILTERFILE_DESCTITLE);
+	title = _("Description");
 	m_listFilters.InsertColumn(1, title.c_str(), LVCFMT_LEFT, 350);
-	title = theApp.LoadString(IDS_FILTERFILE_PATHTITLE);
+	title = _("Location");
 	m_listFilters.InsertColumn(2, title.c_str(), LVCFMT_LEFT, 350);
 
-	title = theApp.LoadString(IDS_USERCHOICE_NONE);
+	title = _("<None>");
 	m_listFilters.InsertItem(1, title.c_str());
 	m_listFilters.SetItemText(0, 1, title.c_str());
 	m_listFilters.SetItemText(0, 2, title.c_str());
@@ -156,7 +156,7 @@ void FileFiltersDlg::InitList()
 void FileFiltersDlg::SelectFilterByIndex(int index)
 {
 	m_listFilters.SetItemState(index, LVIS_SELECTED, LVIS_SELECTED);
-	BOOL bPartialOk = FALSE;
+	bool bPartialOk = false;
 	m_listFilters.EnsureVisible(index, bPartialOk);
 }
 
@@ -237,7 +237,7 @@ void FileFiltersDlg::OnFiltersEditbtn()
 	// Can't edit first "None"
 	if (sel > 0)
 	{
-		CString path = m_listFilters.GetItemText(sel, 2);
+		String path = m_listFilters.GetItemText(sel, 2);
 		EditFileFilter(path);
 	}
 }
@@ -246,7 +246,7 @@ void FileFiltersDlg::OnFiltersEditbtn()
  * @brief Edit file filter in external editor.
  * @param [in] path Full path to file filter to edit.
  */
-void FileFiltersDlg::EditFileFilter(LPCTSTR path)
+void FileFiltersDlg::EditFileFilter(const String& path)
 {
 	CMainFrame::OpenFileToExternalEditor(path);
 }
@@ -282,10 +282,10 @@ static void EnableDlgItem(CWnd * parent, int item, bool enable)
  */
 bool FileFiltersDlg::IsFilterItemNone(int item) const
 {
-	String txtNone = theApp.LoadString(IDS_USERCHOICE_NONE);
-	CString txt = m_listFilters.GetItemText(item, 0);
+	String txtNone = _("<None>");
+	String txt = m_listFilters.GetItemText(item, 0);
 
-	return (txt.CompareNoCase(txtNone.c_str()) == 0);
+	return (string_compare_nocase(txt, txtNone) == 0);
 }
 
 /**
@@ -302,10 +302,10 @@ void FileFiltersDlg::OnLvnItemchangedFilterfileList(NMHDR *pNMHDR, LRESULT *pRes
 	// If item got selected
 	if (pNMLV->uNewState & LVIS_SELECTED)
 	{
-		String txtNone = theApp.LoadString(IDS_USERCHOICE_NONE);
-		CString txt = m_listFilters.GetItemText(pNMLV->iItem, 0);
+		String txtNone = _("<None>");
+		String txt = m_listFilters.GetItemText(pNMLV->iItem, 0);
 
-		bool isNone = txt.CompareNoCase(txtNone.c_str()) == 0;
+		bool isNone = string_compare_nocase(txt, txtNone) == 0;
 
 		EnableDlgItem(this, IDC_FILTERFILE_TEST_BTN, !isNone);
 		EnableDlgItem(this, IDC_FILTERFILE_EDITBTN, !isNone);
@@ -335,8 +335,8 @@ void FileFiltersDlg::OnInfoTip(NMHDR * pNMHDR, LRESULT * pResult)
 		if ((lvhti.flags & LVHT_ONITEMICON) || (lvhti.flags & LVHT_ONITEMLABEL))
 		{
 			// Set item text to tooltip
-			CString strText = m_listFilters.GetItemText(lvhti.iItem, lvhti.iSubItem);
-			_tcscpy(pInfoTip->pszText, strText);
+			String strText = m_listFilters.GetItemText(lvhti.iItem, lvhti.iSubItem);
+			_tcscpy(pInfoTip->pszText, strText.c_str());
 		}
 	}
 }
@@ -407,15 +407,13 @@ void FileFiltersDlg::OnBnClickedFilterfileNewbutton()
 	}
 
 	// Format path to template file
-	String templatePath(globalPath);
-	if (templatePath[templatePath.length() - 1] != '\\')
-		templatePath += '\\';
-	templatePath += FILE_FILTER_TEMPLATE;
+	String templatePath = paths_ConcatPath(globalPath, FILE_FILTER_TEMPLATE);
 
 	if (paths_DoesPathExist(templatePath) != IS_EXISTING_FILE)
 	{
-		String msg = LangFormatString2(IDS_FILEFILTER_TMPL_MISSING,
-			FILE_FILTER_TEMPLATE, templatePath.c_str());
+		String msg = string_format_string2(
+			_("Cannot find file filter template file!\n\nPlease copy file %1 to WinMerge/Filters -folder:\n%2."),
+			FILE_FILTER_TEMPLATE, templatePath);
 		AfxMessageBox(msg.c_str(), MB_ICONERROR);
 		return;
 	}
@@ -428,11 +426,11 @@ void FileFiltersDlg::OnBnClickedFilterfileNewbutton()
 		if (path.empty()) return;
 	}
 
-	if (path.length() && path[path.length() - 1] != '\\')
-		path += '\\';
+	if (path.length())
+		path = paths_AddTrailingSlash(path);
 	
 	String s;
-	if (SelectFile(GetSafeHwnd(), s, path.c_str(), IDS_FILEFILTER_SAVENEW, IDS_FILEFILTER_FILEMASK,
+	if (SelectFile(GetSafeHwnd(), s, path.c_str(), _("Select filename for new filter"), _("File Filters (*.flt)|*.flt|All Files (*.*)|*.*||"),
 		FALSE))
 	{
 		// Fix file extension
@@ -457,10 +455,13 @@ void FileFiltersDlg::OnBnClickedFilterfileNewbutton()
 		// user has already allowed it.
 		if (!CopyFile(templatePath.c_str(), s.c_str(), FALSE))
 		{
-			ResMsgBox1(IDS_FILEFILTER_TMPL_COPY, templatePath.c_str(), MB_ICONERROR);
+			String msg = string_format_string1(
+				_( "Cannot copy filter template file to filter folder:\n%1\n\nPlease make sure the folder exists and is writable."),
+				templatePath);
+			AfxMessageBox(msg.c_str(), MB_ICONERROR);
 			return;
 		}
-		EditFileFilter(s.c_str());
+		EditFileFilter(s);
 		FileFilterMgr *pMgr = theApp.m_globalFileFilter.GetManager();
 		int retval = pMgr->AddFilter(s.c_str());
 		if (retval == FILTER_OK)
@@ -481,7 +482,7 @@ void FileFiltersDlg::OnBnClickedFilterfileNewbutton()
  */
 void FileFiltersDlg::OnBnClickedFilterfileDelete()
 {
-	CString path;
+	String path;
 	int sel =- 1;
 
 	sel = m_listFilters.GetNextItem(sel, LVNI_SELECTED);
@@ -489,17 +490,16 @@ void FileFiltersDlg::OnBnClickedFilterfileDelete()
 	// Can't delete first "None"
 	if (sel > 0)
 	{
-		m_listFilters.GetItemText(sel, 2, path.GetBuffer(MAX_PATH),	MAX_PATH);
-		path.ReleaseBuffer();
+		path = m_listFilters.GetItemText(sel, 2);
 
-		String sConfirm = LangFormatString1(IDS_CONFIRM_DELETE_SINGLE, path);
+		String sConfirm = string_format_string1(_("Are you sure you want to delete\n\n%1 ?"), path);
 		int res = AfxMessageBox(sConfirm.c_str(), MB_ICONWARNING | MB_YESNO);
 		if (res == IDYES)
 		{
-			if (DeleteFile(path))
+			if (DeleteFile(path.c_str()))
 			{
 				FileFilterMgr *pMgr = theApp.m_globalFileFilter.GetManager();
-				pMgr->RemoveFilter((LPCTSTR)path);
+				pMgr->RemoveFilter(path);
 				
 				// Remove all from filterslist and re-add so we can update UI
 				String selected;
@@ -510,7 +510,10 @@ void FileFiltersDlg::OnBnClickedFilterfileDelete()
 			}
 			else
 			{
-				ResMsgBox1(IDS_FILEFILTER_DELETE_FAIL, path, MB_ICONSTOP);
+				String msg = string_format_string1(
+					_("Failed to delete the filter file:\n%1\n\nMaybe the file is read-only?"),
+					path);
+				AfxMessageBox(msg.c_str(), MB_ICONSTOP);
 			}
 		}
 	}
@@ -525,7 +528,7 @@ void FileFiltersDlg::UpdateFiltersList()
 
 	m_listFilters.DeleteAllItems();
 
-	String title = theApp.LoadString(IDS_USERCHOICE_NONE);
+	String title = _("<None>");
 	m_listFilters.InsertItem(1, title.c_str());
 	m_listFilters.SetItemText(0, 1, title.c_str());
 	m_listFilters.SetItemText(0, 2, title.c_str());
@@ -558,7 +561,7 @@ void FileFiltersDlg::OnBnClickedFilterfileInstall()
 	String path;
 	String userPath = theApp.m_globalFileFilter.GetUserFilterPathWithCreate();
 
-	if (SelectFile(GetSafeHwnd(), s, path.c_str(), IDS_FILEFILTER_INSTALL, IDS_FILEFILTER_FILEMASK,
+	if (SelectFile(GetSafeHwnd(), s, path.c_str(), _("Locate filter file to install"), _("File Filters (*.flt)|*.flt|All Files (*.*)|*.*||"),
 		TRUE))
 	{
 		String sfile, sext;

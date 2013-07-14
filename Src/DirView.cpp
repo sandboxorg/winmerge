@@ -31,6 +31,7 @@
 #include "Merge.h"
 #include "ClipBoard.h"
 #include "DirView.h"
+#include "DirViewColItems.h"
 #include "DirFrame.h"  // StatePane
 #include "DirDoc.h"
 #include "HexMergeFrm.h"
@@ -148,6 +149,7 @@ CDirView::CDirView()
 		, m_pShellContextMenuRight(NULL)
 		, m_hCurrentMenu(NULL)
 		, m_pSavedTreeState(NULL)
+		, m_pColItems(NULL)
 {
 	m_dwDefaultStyle &= ~LVS_TYPEMASK;
 	// Show selection all the time, so user can see current item even when
@@ -325,6 +327,7 @@ void CDirView::OnInitialUpdate()
 	CListView::OnInitialUpdate();
 	m_pList = &GetListCtrl();
 	GetDocument()->SetDirView(this);
+	m_pColItems.reset(new DirViewColItems(GetDocument()->m_nDirs));
 
 #ifdef _UNICODE
 	m_pList->SendMessage(CCM_SETUNICODEFORMAT, TRUE, 0);
@@ -454,14 +457,6 @@ int CDirView::GetColImage(const DIFFITEM & di) const
 }
 
 /**
- * @brief Get default folder compare status image.
- */
-int CDirView::GetDefaultColImage() const
-{
-	return DIFFIMG_ERROR;
-}
-
-/**
  * @brief Called before compare is started.
  * CDirDoc calls this function before new compare is started, so this
  * is good place to setup GUI for compare.
@@ -504,7 +499,7 @@ void CDirView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		}
 		else
 		{
-			WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+			WaitStatusCursor waitstatus(_("Opening selection"));
 			OpenSelection();
 		}
 	}
@@ -704,7 +699,7 @@ void CDirView::ListContextMenu(CPoint point, int /*i*/)
 	CMenu menuPluginsHolder;
 	menuPluginsHolder.LoadMenu(IDR_POPUP_PLUGINS_SETTINGS);
 	theApp.TranslateMenu(menuPluginsHolder.m_hMenu);
-	String s = theApp.LoadString(ID_TITLE_PLUGINS_SETTINGS);
+	String s = _("Plugin Settings");
 	pPopup->AppendMenu(MF_POPUP, (int)menuPluginsHolder.m_hMenu, s.c_str());
 
 	bool bEnableShellContextMenu = GetOptionsMgr()->GetBool(OPT_DIRVIEW_ENABLE_SHELL_CONTEXT_MENU);
@@ -735,17 +730,17 @@ void CDirView::ListContextMenu(CPoint point, int /*i*/)
 
 		if (leftContextMenuOk)
 		{
-			s = theApp.LoadString(IDS_SHELL_CONTEXT_MENU_LEFT);
+			s = _("Left Shell menu");
 			pPopup->AppendMenu(MF_POPUP, (UINT_PTR)m_pShellContextMenuLeft->GetHMENU(), s.c_str());
 		}
 		if (middleContextMenuOk)
 		{
-			s = theApp.LoadString(IDS_SHELL_CONTEXT_MENU_MIDDLE);
+			s = _("Middle Shell menu");
 			pPopup->AppendMenu(MF_POPUP, (UINT_PTR)m_pShellContextMenuMiddle->GetHMENU(), s.c_str());
 		}
 		if (rightContextMenuOk)
 		{
-			s = theApp.LoadString(IDS_SHELL_CONTEXT_MENU_RIGHT);
+			s = _("Right Shell menu");
 			pPopup->AppendMenu(MF_POPUP, (UINT_PTR)m_pShellContextMenuRight->GetHMENU(), s.c_str());
 		}
 	}
@@ -930,15 +925,6 @@ String NumToStr(int n)
 	return locality::NumToLocaleStr(n);
 }
 
-/// Change menu item by using string resource
-// (Question: Why don't we just remove it from the menu resource entirely & do an Add here ?)
-void CDirView::ModifyPopup(CMenu * pPopup, int nStringResource, int nMenuId, LPCTSTR szPath)
-{
-	String s = LangFormatString1(nStringResource, szPath);
-	pPopup->ModifyMenu(nMenuId, MF_BYCOMMAND | MF_STRING, nMenuId, s.c_str());
-}
-
-
 /**
  * @brief User chose (main menu) Copy from right to left
  */
@@ -1020,9 +1006,9 @@ void CDirView::DoUpdateDirCopyRightToLeft(CCmdUI* pCmdUI, eMenuType menuType)
 		{
 			String s;
 			if (legalcount == selcount)
-				s = LangFormatString1(IDS_COPY_TO_LEFT, NumToStr(selcount).c_str());
+				s = string_format_string1(_("Right to Left (%1)"), NumToStr(selcount));
 			else
-				s = LangFormatString2(IDS_COPY_TO_LEFT2, NumToStr(legalcount).c_str(), NumToStr(selcount).c_str());
+				s = string_format_string2(_("Right to Left (%1 of %2)"), NumToStr(legalcount), NumToStr(selcount));
 			pCmdUI->SetText(s.c_str());
 		}
 	}
@@ -1049,9 +1035,9 @@ void CDirView::DoUpdateDirCopyLeftToRight(CCmdUI* pCmdUI, eMenuType menuType)
 		{
 			String s;
 			if (legalcount == selcount)
-				s = LangFormatString1(IDS_COPY_TO_RIGHT, NumToStr(selcount).c_str());
+				s = string_format_string1(_("Left to Right (%1)"), NumToStr(selcount));
 			else
-				s = LangFormatString2(IDS_COPY_TO_RIGHT2, NumToStr(legalcount).c_str(), NumToStr(selcount).c_str());
+				s = string_format_string2(_("Left to Right (%1 of %2)"), NumToStr(legalcount), NumToStr(selcount));
 			pCmdUI->SetText(s.c_str());
 		}
 	}
@@ -1143,7 +1129,7 @@ void CDirView::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 			}
 			else
 			{
-				WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+				WaitStatusCursor waitstatus(_("Opening selection"));
 				OpenSelection();
 			}
 		}
@@ -1321,19 +1307,6 @@ bool CDirView::GetSelectedItems(int * sel1, int * sel2, int * sel3)
 }
 
 /**
- * @brief Return true if this unpacker handles binary files
- */
-static bool
-IsBinaryUnpacker(PackingInfo * infoUnpacker)
-{
-	if (!infoUnpacker)
-		return false;
-	if (!_tcsstr(infoUnpacker->pluginName.c_str(), _T("BinaryFile")))
-		return false;
-	return true;
-}
-
-/**
  * @brief Open special items (parent folders etc).
  * @param [in] pos1 First item position.
  * @param [in] pos2 Second item position.
@@ -1353,49 +1326,6 @@ void CDirView::OpenSpecialItems(UIntPtr pos1, UIntPtr pos2, UIntPtr pos3)
 		// Parent directory & something else selected
 		// Not valid action
 	}
-}
-
-/**
- * @brief Creates a pairing folder for unique folder item.
- * This function creates a pairing folder for unique folder item in
- * folder compare. This way user can browse into unique folder's
- * contents and don't necessarily need to copy whole folder structure.
- * @param [in] di DIFFITEM for folder compare item.
- * @param [in] side1 true if our unique folder item is side1 item.
- * @param [out] newFolder New created folder (full folder path).
- * @return true if user agreed and folder was created.
- */
-bool CDirView::CreateFoldersPair(DIFFITEM & di, bool side1, String &newFolder)
-{
-	String subdir;
-	String basedir;
-	if (side1)
-	{
-		// Get left side (side1) folder name (existing) and
-		// right side base path (where to create)
-		subdir = di.diffFileInfo[0].filename;
-		basedir = GetDocument()->GetBasePath(1);
-		basedir = di.getFilepath(0, basedir);
-	}
-	else
-	{
-		// Get right side (side2) folder name (existing) and
-		// left side base path (where to create)
-		subdir = di.diffFileInfo[1].filename;
-		basedir = GetDocument()->GetBasePath(0);
-		basedir = di.getFilepath(1, basedir);
-	}
-	String createpath = paths_ConcatPath(basedir, subdir);
-	newFolder = createpath;
-
-	String message = LangFormatString1(IDS_CREATE_PAIR_FOLDER, createpath.c_str());
-	int res = AfxMessageBox(message.c_str(), MB_YESNO | MB_ICONWARNING);
-	if (res == IDYES)
-	{
-		bool ret = paths_CreateIfNeeded(createpath);
-		return ret;
-	}
-	return false;
 }
 
 /**
@@ -1433,43 +1363,13 @@ bool CDirView::OpenOneItem(UIntPtr pos1, DIFFITEM **di1, DIFFITEM **di2, DIFFITE
 		if (path1Exists != IS_EXISTING_DIR || path2Exists != IS_EXISTING_DIR)
 		{
 			String invalid = path1Exists == IS_EXISTING_DIR ? paths[0] : paths[1];
-			ResMsgBox1(IDS_DIRCMP_NOTSYNC, invalid.c_str(), MB_ICONSTOP);
+			String msg = string_format_string1(
+				_("Operation aborted!\n\nFolder contents at disks has changed, path\n%1\nwas not found.\n\nPlease refresh the compare."),
+				invalid);
+			AfxMessageBox(msg.c_str(), MB_ICONSTOP);
 			return false;
 		}
 	}
-//	else if ((*di1)->diffcode.isSideLeftOnly())
-//	{
-//		// Open left-only item to editor if its not a folder or binary
-//		if (isDir)
-//		{
-//			if (CreateFoldersPair(**di1, true, path2))
-//			{
-//				return true;
-//			}
-//		}
-//		else if ((*di1)->diffcode.isBin())
-//			LangMessageBox(IDS_CANNOT_OPEN_BINARYFILE, MB_ICONSTOP);
-//		else
-//			DoOpenWithEditor(SIDE_LEFT);
-//		return false;
-//	}
-//	else if ((*di1)->diffcode.isSideRightOnly())
-//	{
-//		// Open right-only item to editor if its not a folder or binary
-//		if (isDir)
-//		{
-//			if (CreateFoldersPair(**di1, false, path1))
-//			{
-//				return true;
-//			}
-//		}
-//		else if ((*di1)->diffcode.isBin())
-//			LangMessageBox(IDS_CANNOT_OPEN_BINARYFILE, MB_ICONSTOP);
-//		else
-//			DoOpenWithEditor(SIDE_RIGHT);
-//		return false;
-//	}
-	// Fall through and compare files (which may be archives)
 
 	return true;
 }
@@ -1811,12 +1711,12 @@ void CDirView::OpenSelection(SELECTIONTYPE selectionType /*= SELECTIONTYPE_NORMA
 			if (di1 == di2 && !di1->diffcode.isExists(0))
 			{
 				paths[0] = _T("");
-				GetMainFrame()->m_strDescriptions[0] = theApp.LoadString(IDS_EMPTY_LEFT_FILE);
+				GetMainFrame()->m_strDescriptions[0] = _("Untitled left");
 			}
 			if (di1 == di2 && !di1->diffcode.isExists(1))
 			{
 				paths[1] = _T("");
-				GetMainFrame()->m_strDescriptions[1] = theApp.LoadString(IDS_EMPTY_RIGHT_FILE);
+				GetMainFrame()->m_strDescriptions[1] = _("Untitled right");
 			}
 		}
 		else
@@ -1827,17 +1727,17 @@ void CDirView::OpenSelection(SELECTIONTYPE selectionType /*= SELECTIONTYPE_NORMA
 			if (di1 == di2 && di1 == di3 && !di1->diffcode.isExists(0))
 			{
 				paths[0] = _T("");
-				GetMainFrame()->m_strDescriptions[0] = theApp.LoadString(IDS_EMPTY_LEFT_FILE);
+				GetMainFrame()->m_strDescriptions[0] = _("Untitled left");
 			}
 			if (di1 == di2 && di1 == di3 && !di1->diffcode.isExists(1))
 			{
 				paths[1] = _T("");
-				GetMainFrame()->m_strDescriptions[1] = theApp.LoadString(IDS_EMPTY_MIDDLE_FILE);
+				GetMainFrame()->m_strDescriptions[1] = _("Untitled middle");
 			}
 			if (di1 == di2 && di1 == di3 && !di1->diffcode.isExists(2))
 			{
 				paths[2] = _T("");
-				GetMainFrame()->m_strDescriptions[2] = theApp.LoadString(IDS_EMPTY_RIGHT_FILE);
+				GetMainFrame()->m_strDescriptions[2] = _("Untitled right");
 			}
 		}
 
@@ -1911,7 +1811,7 @@ void CDirView::OpenSelectionHex()
 	// Open identical and different files
 	bool bRO[3];
 	for (int nIndex = 0; nIndex < paths.GetSize(); nIndex++)
-		bRO[nIndex] = !!pDoc->GetReadOnly(true);
+		bRO[nIndex] = pDoc->GetReadOnly(true);
 
 	GetMainFrame()->ShowHexMergeDoc(pDoc, paths, bRO);
 }
@@ -1971,9 +1871,9 @@ void CDirView::DoUpdateCtxtDirDelLeft(CCmdUI* pCmdUI)
 
 		String s;
 		if (count == total)
-			s = LangFormatString1(IDS_DEL_LEFT_FMT, NumToStr(total).c_str());
+			s = string_format_string1(_("Left (%1)"), NumToStr(total));
 		else
-			s = LangFormatString2(IDS_DEL_LEFT_FMT2, NumToStr(count).c_str(), NumToStr(total).c_str());
+			s = string_format_string2(_("Left (%1 of %2)"), NumToStr(count), NumToStr(total));
 		pCmdUI->SetText(s.c_str());
 	}
 }
@@ -1998,9 +1898,9 @@ void CDirView::DoUpdateCtxtDirDelRight(CCmdUI* pCmdUI)
 
 		String s;
 		if (count == total)
-			s = LangFormatString1(IDS_DEL_RIGHT_FMT, NumToStr(total).c_str());
+			s = string_format_string1(_("Right (%1)"), NumToStr(total));
 		else
-			s = LangFormatString2(IDS_DEL_RIGHT_FMT2, NumToStr(count).c_str(), NumToStr(total).c_str());
+			s = string_format_string2(_("Right (%1 of %2)"), NumToStr(count), NumToStr(total));
 		pCmdUI->SetText(s.c_str());
 	}
 }
@@ -2027,9 +1927,9 @@ void CDirView::DoUpdateCtxtDirDelBoth(CCmdUI* pCmdUI)
 
 		String s;
 		if (count == total)
-			s = LangFormatString1(IDS_DEL_BOTH_FMT, NumToStr(total).c_str());
+			s = string_format_string1(_("Both (%1)"), NumToStr(total));
 		else
-			s = LangFormatString2(IDS_DEL_BOTH_FMT2, NumToStr(count).c_str(), NumToStr(total).c_str());
+			s = string_format_string2(_("Both (%1 of %2)"), NumToStr(count), NumToStr(total));
 		pCmdUI->SetText(s.c_str());
 	}
 }
@@ -2052,9 +1952,9 @@ void CDirView::DoUpdateCtxtDirCopyLeftTo(CCmdUI* pCmdUI)
 
 	String s;
 	if (count == total)
-		s = LangFormatString1(IDS_COPY_LEFT_TO, NumToStr(total).c_str());
+		s = string_format_string1(_("Left to... (%1)"), NumToStr(total));
 	else
-		s = LangFormatString2(IDS_COPY_LEFT_TO2, NumToStr(count).c_str(), NumToStr(total).c_str());
+		s = string_format_string2(_("Left to... (%1 of %2)"), NumToStr(count), NumToStr(total));
 	pCmdUI->SetText(s.c_str());
 }
 
@@ -2076,9 +1976,9 @@ void CDirView::DoUpdateCtxtDirCopyRightTo(CCmdUI* pCmdUI)
 
 	String s;
 	if (count == total)
-		s = LangFormatString1(IDS_COPY_RIGHT_TO, NumToStr(total).c_str());
+		s = string_format_string1(_("Right to... (%1)"), NumToStr(total));
 	else
-		s = LangFormatString2(IDS_COPY_RIGHT_TO2, NumToStr(count).c_str(), NumToStr(total).c_str());
+		s = string_format_string2(_("Right to... (%1 of %2)"), NumToStr(count), NumToStr(total));
 	pCmdUI->SetText(s.c_str());
 }
 
@@ -2100,9 +2000,9 @@ void CDirView::DoUpdateCtxtDirMoveLeftTo(CCmdUI* pCmdUI)
 
 	String s;
 	if (count == total)
-		s = LangFormatString1(IDS_MOVE_LEFT_TO, NumToStr(total).c_str());
+		s = string_format_string1(_("Left to... (%1)"), NumToStr(total));
 	else
-		s = LangFormatString2(IDS_MOVE_LEFT_TO2, NumToStr(count).c_str(), NumToStr(total).c_str());
+		s = string_format_string2(_("Left to... (%1 of %2)"), NumToStr(count), NumToStr(total));
 	pCmdUI->SetText(s.c_str());
 }
 
@@ -2124,9 +2024,9 @@ void CDirView::DoUpdateCtxtDirMoveRightTo(CCmdUI* pCmdUI)
 
 	String s;
 	if (count == total)
-		s = LangFormatString1(IDS_MOVE_RIGHT_TO, NumToStr(total).c_str());
+		s = string_format_string1(_("Right to... (%1)"), NumToStr(total));
 	else
-		s = LangFormatString2(IDS_MOVE_RIGHT_TO2, NumToStr(count).c_str(), NumToStr(total).c_str());
+		s = string_format_string2(_("Right to... (%1 of %2)"), NumToStr(count), NumToStr(total));
 	pCmdUI->SetText(s.c_str());
 }
 
@@ -2919,7 +2819,7 @@ LRESULT CDirView::OnUpdateUIMessage(WPARAM wParam, LPARAM lParam)
 		// If compare took more than TimeToSignalCompare seconds, notify user
 		clock_t elapsed = clock() - m_compareStart;
 		GetParentFrame()->SetMessageText(
-			string_format(theApp.LoadString(IDS_ELAPSED_TIME).c_str(), elapsed).c_str()
+			string_format(_("Elapsed time: %ld ms").c_str(), elapsed).c_str()
 		);
 		if (elapsed > TimeToSignalCompare * CLOCKS_PER_SEC)
 			MessageBeep(IDOK);
@@ -3061,7 +2961,7 @@ void CDirView::SetColumnWidths()
 		int phy = ColLogToPhys(i);
 		if (phy >= 0)
 		{
-			String sWidthKey = GetColRegValueNameBase(i) + _T("_Width");
+			String sWidthKey = m_pColItems->GetColRegValueNameBase(i) + _T("_Width");
 			int w = max(10, theApp.GetProfileInt(GetDocument()->m_nDirs < 3 ? _T("DirView") : _T("DirView3"), sWidthKey.c_str(), DefColumnWidth));
 			GetListCtrl().SetColumnWidth(m_colorder[i], w);
 		}
@@ -3083,7 +2983,7 @@ void CDirView::SaveColumnWidths()
 		int phy = ColLogToPhys(i);
 		if (phy >= 0)
 		{
-			String sWidthKey = GetColRegValueNameBase(i) + _T("_Width");
+			String sWidthKey = m_pColItems->GetColRegValueNameBase(i) + _T("_Width");
 			int w = GetListCtrl().GetColumnWidth(phy);
 			theApp.WriteProfileInt(GetDocument()->m_nDirs < 3 ? _T("DirView") : _T("DirView3"), sWidthKey.c_str(), w);
 		}
@@ -3113,11 +3013,11 @@ void CDirView::OnTimer(UINT_PTR nIDEvent)
 		int items = GetSelectedCount();
 
 		if (items == 1)
-			msg = theApp.LoadString(IDS_STATUS_SELITEM1);
+			msg = _("1 item selected");
 		else
 		{
 			String num = string_format(_T("%d"), items);
-			msg = LangFormatString1(IDS_STATUS_SELITEMS, num.c_str());
+			msg = string_format_string1(_("%1 items selected"), num);
 		}
 		GetParentFrame()->SetStatus(msg.c_str());
 	}
@@ -3226,7 +3126,7 @@ void CDirView::OnCtxtOpenWithUnpacker()
 	if (sel != -1)
 	{
 		// let the user choose a handler
-		CSelectUnpackerDlg dlg(GetDiffItem(sel).diffFileInfo[0].filename.c_str(), this);
+		CSelectUnpackerDlg dlg(GetDiffItem(sel).diffFileInfo[0].filename, this);
 		// create now a new infoUnpacker to initialize the manual/automatic flag
 		PackingInfo infoUnpacker(PLUGIN_AUTO);
 		dlg.SetInitialInfoHandler(&infoUnpacker);
@@ -3272,7 +3172,7 @@ void CDirView::GetCurrentColRegKeys(std::vector<String>& colKeys)
 	for (int col = 0; col < nphyscols; ++col)
 	{
 		int logcol = ColPhysToLog(col);
-		colKeys.push_back(GetColRegValueNameBase(logcol));
+		colKeys.push_back(m_pColItems->GetColRegValueNameBase(logcol));
 	}
 }
 
@@ -3351,7 +3251,12 @@ void CDirView::OnToolsGenerateReport()
 		if (errStr.empty())
 			LangMessageBox(IDS_REPORT_SUCCESS, MB_OK | MB_ICONINFORMATION);
 		else
-			ResMsgBox1(IDS_REPORT_ERROR, errStr.c_str(), MB_OK | MB_ICONSTOP);
+		{
+			String msg = string_format_string1(
+				_("Error creating the report:\n%1"),
+				errStr);
+			AfxMessageBox(msg.c_str(), MB_OK | MB_ICONSTOP);
+		}
 	}
 }
 
@@ -3588,7 +3493,7 @@ void CDirView::ResetColumnWidths()
 		int phy = ColLogToPhys(i);
 		if (phy >= 0)
 		{
-			String sWidthKey = GetColRegValueNameBase(i) + _T("_Width");
+			String sWidthKey = m_pColItems->GetColRegValueNameBase(i) + _T("_Width");
 			theApp.WriteProfileInt(GetDocument()->m_nDirs < 3 ? _T("DirView") : _T("DirView3"), sWidthKey.c_str(), DefColumnWidth);
 		}
 	}
@@ -3881,7 +3786,7 @@ void CDirView::OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult)
 	{
 		int items = GetSelectedCount();
 		String num = string_format(_T("%d"), items);
-		String msg = LangFormatString1(items == 1 ? IDS_STATUS_SELITEM1 : IDS_STATUS_SELITEMS, num.c_str());
+		String msg = string_format_string1(items == 1 ? _("1 item selected") : _("%1 items selected"), num);
 		GetParentFrame()->SetStatus(msg.c_str());
 	}
 	*pResult = 0;
@@ -3981,7 +3886,7 @@ void CDirView::OnUpdateStatusNum(CCmdUI* pCmdUI)
 		// No item has focus
 		String sCnt = string_format(_T("%ld"), count);
 		// "Items: %1"
-		s = LangFormatString1(IDS_DIRVIEW_STATUS_FMT_NOFOCUS, sCnt.c_str());
+		s = string_format_string1(_("Items: %1"), sCnt);
 	}
 	else
 	{
@@ -3999,7 +3904,7 @@ void CDirView::OnUpdateStatusNum(CCmdUI* pCmdUI)
 			String sIdx = string_format(_T("%ld"), focusItem + 1);
 			String sCnt = string_format(_T("%ld"), count);
 			// "Item %1 of %2"
-			s = LangFormatString2(IDS_DIRVIEW_STATUS_FMT_FOCUS, sIdx.c_str(), sCnt.c_str());
+			s = string_format_string2(_("Item %1 of %2"), sIdx, sCnt);
 		}
 	}
 	pCmdUI->SetText(s.c_str());
@@ -4092,44 +3997,44 @@ void CDirView::OnUpdateViewCollapseAllSubdirs(CCmdUI* pCmdUI)
 
 void CDirView::OnMergeCompare()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+	WaitStatusCursor waitstatus(_("Opening selection"));
 	OpenSelection();
 }
 
 void CDirView::OnMergeCompareLeft1Left2()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+	WaitStatusCursor waitstatus(_("Opening selection"));
 	OpenSelection(SELECTIONTYPE_LEFT1LEFT2);
 }
 
 void CDirView::OnMergeCompareRight1Right2()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+	WaitStatusCursor waitstatus(_("Opening selection"));
 	OpenSelection(SELECTIONTYPE_RIGHT1RIGHT2);
 }
 
 void CDirView::OnMergeCompareLeft1Right2()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+	WaitStatusCursor waitstatus(_("Opening selection"));
 	OpenSelection(SELECTIONTYPE_LEFT1RIGHT2);
 }
 
 void CDirView::OnMergeCompareLeft2Right1()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+	WaitStatusCursor waitstatus(_("Opening selection"));
 	OpenSelection(SELECTIONTYPE_LEFT2RIGHT1);
 }
 
 void CDirView::OnMergeCompareXML()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+	WaitStatusCursor waitstatus(_("Opening selection"));
 	PackingInfo packingInfo = PLUGIN_BUILTIN_XML;
 	OpenSelection(SELECTIONTYPE_NORMAL, &packingInfo);
 }
 
 void CDirView::OnMergeCompareHex()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_OPENING_SELECTION);
+	WaitStatusCursor waitstatus(_("Opening selection"));
 	OpenSelectionHex();
 }
 

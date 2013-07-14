@@ -231,27 +231,27 @@ BOOL CHexMergeDoc::PromptAndSaveIfNeeded(BOOL bAllowCancel)
 	const String &pathRight = m_filePaths.GetRight();
 
 	BOOL result = TRUE;
-	BOOL bLSaveSuccess = FALSE, bMSaveSuccess = FALSE, bRSaveSuccess = FALSE;
+	bool bLSaveSuccess = false, bMSaveSuccess = false, bRSaveSuccess = false;
 
 	SaveClosingDlg dlg;
 	dlg.DoAskFor(bLModified, bMModified, bRModified);
 	if (!bAllowCancel)
-		dlg.m_bDisableCancel = TRUE;
+		dlg.m_bDisableCancel = true;
 	if (!pathLeft.empty())
-		dlg.m_sLeftFile = pathLeft.c_str();
+		dlg.m_sLeftFile = pathLeft;
 	else
-		dlg.m_sLeftFile = m_strDesc[0].c_str();
+		dlg.m_sLeftFile = m_strDesc[0];
 	if (m_nBuffers == 3)
 	{
 		if (!pathMiddle.empty())
-			dlg.m_sMiddleFile = pathMiddle.c_str();
+			dlg.m_sMiddleFile = pathMiddle;
 		else
-			dlg.m_sMiddleFile = m_strDesc[1].c_str();
+			dlg.m_sMiddleFile = m_strDesc[1];
 	}
 	if (!pathRight.empty())
-		dlg.m_sRightFile = pathRight.c_str();
+		dlg.m_sRightFile = pathRight;
 	else
-		dlg.m_sRightFile = m_strDesc[1].c_str();
+		dlg.m_sRightFile = m_strDesc[1];
 
 	if (dlg.DoModal() == IDOK)
 	{
@@ -371,14 +371,14 @@ void CHexMergeDoc::DoFileSaveAs(int nBuffer)
 {
 	const String &path = m_filePaths.GetPath(nBuffer);
 	String strPath;
-	int id;
+	String title;
 	if (nBuffer == 0)
-		id = IDS_SAVE_LEFT_AS;
+		title = _("Save Left File As");
 	else if (nBuffer == m_nBuffers - 1)
-		id = IDS_SAVE_RIGHT_AS;
+		title = _("Save Right File As");
 	else
-		id = IDS_SAVE_MIDDLE_AS;
-	if (SelectFile(GetMainFrame()->GetSafeHwnd(), strPath, path.c_str(), id, NULL, FALSE))
+		title = _("Save Middle File As");
+	if (SelectFile(GetMainFrame()->GetSafeHwnd(), strPath, path.c_str(), title, _T(""), FALSE))
 	{
 		if (Try(m_pView[nBuffer]->SaveFile(strPath.c_str())) == IDCANCEL)
 			return;
@@ -558,7 +558,7 @@ void CHexMergeDoc::UpdateHeaderPath(int pane)
 	}
 	if (m_pView[pane]->GetModified())
 		sText.insert(0, _T("* "));
-	pf->GetHeaderInterface()->SetText(pane, sText.c_str());
+	pf->GetHeaderInterface()->SetText(pane, sText);
 
 	SetTitle(NULL);
 }

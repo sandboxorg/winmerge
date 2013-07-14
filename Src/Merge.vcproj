@@ -2664,43 +2664,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="ssapi.cpp">
-				<FileConfiguration
-					Name="UnicodeRelease|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="1"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="UnicodeDebug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="1"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="stringdiffs.cpp">
 				<FileConfiguration
 					Name="UnicodeRelease|Win32">
@@ -3248,6 +3211,9 @@
 				RelativePath="Common\multiformatText.h">
 			</File>
 			<File
+				RelativePath=".\Common\MyCom.h">
+			</File>
+			<File
 				RelativePath=".\OptionsDiffColors.h">
 			</File>
 			<File
@@ -3294,6 +3260,9 @@
 			</File>
 			<File
 				RelativePath="ssapi.h">
+			</File>
+			<File
+				RelativePath=".\ssauto.h">
 			</File>
 			<File
 				RelativePath="stringdiffs.h">
@@ -4732,6 +4701,9 @@
 					RelativePath=".\CustomColors.cpp">
 				</File>
 				<File
+					RelativePath=".\CustomStatusCursor.cpp">
+				</File>
+				<File
 					RelativePath="DiffTextBuffer.cpp">
 					<FileConfiguration
 						Name="UnicodeRelease|Win32">
@@ -5001,7 +4973,8 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
+							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="UnicodeDebug|Win32">
@@ -5010,6 +4983,7 @@
 							Optimization="0"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -5019,6 +4993,7 @@
 							Optimization="0"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -5027,7 +5002,8 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
+							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"/>
 					</FileConfiguration>
 				</File>
 				<File
@@ -6105,7 +6081,8 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
+							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="UnicodeDebug|Win32">
@@ -6114,6 +6091,7 @@
 							Optimization="0"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -6123,6 +6101,7 @@
 							Optimization="0"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -6131,7 +6110,8 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
+							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"/>
 					</FileConfiguration>
 				</File>
 				<File
@@ -6429,6 +6409,9 @@
 					RelativePath=".\CustomColors.h">
 				</File>
 				<File
+					RelativePath=".\CustomStatusCursor.h">
+				</File>
+				<File
 					RelativePath="DiffTextBuffer.h">
 				</File>
 				<File
@@ -6568,6 +6551,9 @@
 				</File>
 				<File
 					RelativePath="Common\SortHeaderCtrl.h">
+				</File>
+				<File
+					RelativePath=".\SourceControl.h">
 				</File>
 				<File
 					RelativePath="Splash.h">
