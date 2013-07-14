@@ -1,0 +1,108 @@
+/////////////////////////////////////////////////////////////////////////////
+//    WinMerge:  an interactive diff/merge utility
+//    Copyright (C) 1997-2000  Thingamahoochie Software
+//    Author: Dean Grimm
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with this program; if not, write to the Free Software
+//    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+/////////////////////////////////////////////////////////////////////////////
+/**
+ *  @file SelectUnpackerDlg.h : 
+ *
+ *  @brief Declaration file for the dialog SelectUnpacker
+ */ 
+// RCS ID line follows -- this is updated by CVS
+// $Id$
+
+#if !defined(AFX_SELECTUNPACKERDLG_H__C8FD4C3A_5ED5_43D3_ADAE_A2378369705C__INCLUDED_)
+#define AFX_SELECTUNPACKERDLG_H__C8FD4C3A_5ED5_43D3_ADAE_A2378369705C__INCLUDED_
+
+#include <vector>
+#include "UnicodeString.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// CSelectUnpackerDlgDlg dialog
+
+class PackingInfo;
+class PluginInfo;
+
+class CSelectUnpackerDlg : public CDialog
+{
+private:
+// Construction
+	void Initialize();
+
+public:
+// Construction
+	CSelectUnpackerDlg(const String& filename, CWnd* pParent /*=NULL*/);
+	CSelectUnpackerDlg(const String& filename1, const String& filename2, CWnd* pParent /*=NULL*/);
+	~CSelectUnpackerDlg();
+
+	void SetInitialInfoHandler(PackingInfo * infoHandler);
+	const PackingInfo GetInfoHandler();
+
+// Dialog Data
+	//{{AFX_DATA(CSelectUnpackerDlg)
+	enum { IDD = IDD_SELECTUNPACKER };
+	CButton	m_btnOK;
+	CComboBox	m_cboUnpackerName;
+	bool	m_bNoExtensionCheck;
+	String	m_strDescription;
+	String	m_strExtensions;
+	//}}AFX_DATA
+
+
+// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CSelectUnpackerDlg)
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	//}}AFX_VIRTUAL
+
+// Implementation
+protected:
+	/// arrays for string describing the available plugins
+	CPtrArray  m_UnpackerPlugins;
+	std::vector<bool> m_bWithFileFlags;
+
+	// const data "no plugin"
+	boost::scoped_ptr<PluginInfo> noPlugin;
+	// const data "automatic plugin"
+	boost::scoped_ptr<PluginInfo> automaticPlugin;
+
+	// input value
+	String m_filteredFilenames;
+
+	/// current plugin choice
+	PluginInfo * m_pPlugin;
+	/// current plugin choice
+	String m_strPluginName;
+
+	void prepareListbox();
+
+	// Generated message map functions
+	//{{AFX_MSG(CSelectUnpackerDlg)
+	virtual void OnOK();
+	virtual BOOL OnInitDialog();
+	afx_msg void OnUnpackerAllowAll();
+	afx_msg void OnSelchangeUnpackerName();
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
+};
+
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#endif // !defined(AFX_SELECTUNPACKERDLG_H__C8FD4C3A_5ED5_43D3_ADAE_A2378369705C__INCLUDED_)
