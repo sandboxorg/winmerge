@@ -212,7 +212,7 @@ void FileFilterHelper::SetMask(const String& strMask)
  * @param [in] szFileName Filename to test.
  * @return true unless we're suppressing this file by filter
  */
-bool FileFilterHelper::includeFile(const String& szFileName)
+bool FileFilterHelper::includeFile(const String& szFileName) const
 {
 	if (m_bUseMask)
 	{
@@ -223,7 +223,7 @@ bool FileFilterHelper::includeFile(const String& szFileName)
 
 		// preprend a backslash if there is none
 		String strFileName = string_makelower(szFileName);
-		if (strFileName[0] != '\\')
+		if (strFileName.empty() || strFileName[0] != '\\')
 			strFileName = _T("\\") + strFileName;
 		// append a point if there is no extension
 		if (strFileName.find('.') == -1)
@@ -245,7 +245,7 @@ bool FileFilterHelper::includeFile(const String& szFileName)
  * @param [in] szFileName Directoryname to test.
  * @return true unless we're suppressing this directory by filter
  */
-bool FileFilterHelper::includeDir(const String& szDirName)
+bool FileFilterHelper::includeDir(const String& szDirName) const
 {
 	if (m_bUseMask)
 	{
@@ -455,7 +455,7 @@ void FileFilterHelper::LoadAllFileFilters()
 	m_fileFilterMgr->DeleteAllFilters();
 
 	// Program application directory
-	m_sGlobalFilterPath = env_GetProgPath() + _T("\\Filters");
+	m_sGlobalFilterPath = paths_ConcatPath(env_GetProgPath(), _T("Filters"));
 	paths_normalize(m_sGlobalFilterPath);
 	String pattern(_T("*"));
 	pattern += FileFilterExt;
