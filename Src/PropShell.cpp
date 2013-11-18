@@ -15,6 +15,8 @@
 #include "OptionsDef.h"
 #include "OptionsMgr.h"
 #include "OptionsPanel.h"
+#include "DDXHelper.h"
+#include "Constants.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -27,9 +29,6 @@ static char THIS_FILE[] = __FILE__;
 #define CONTEXT_F_ADVANCED 0x02
 #define CONTEXT_F_SUBFOLDERS 0x04
 
- // registry dir to WinMerge
-static LPCTSTR f_RegDir = _T("Software\\Thingamahoochie\\WinMerge");
-
 // registry values
 static LPCTSTR f_RegValueEnabled = _T("ContextMenuEnabled");
 static LPCTSTR f_RegValuePath = _T("Executable");
@@ -37,10 +36,10 @@ static LPCTSTR f_RegValuePath = _T("Executable");
 
 PropShell::PropShell(COptionsMgr *optionsMgr) 
 : OptionsPanel(optionsMgr, PropShell::IDD)
-, m_bEnableShellContextMenu(FALSE)
-, m_bContextAdded(FALSE)
-, m_bContextAdvanced(FALSE)
-, m_bContextSubfolders(FALSE)
+, m_bEnableShellContextMenu(false)
+, m_bContextAdded(false)
+, m_bContextAdvanced(false)
+, m_bContextSubfolders(false)
 {
 }
 
@@ -98,11 +97,11 @@ void PropShell::GetContextRegValues()
 {
 	CRegKeyEx reg;
 	LONG retVal = 0;
-	retVal = reg.Open(HKEY_CURRENT_USER, f_RegDir);
+	retVal = reg.Open(HKEY_CURRENT_USER, RegDir);
 	if (retVal != ERROR_SUCCESS)
 	{
 		String msg = string_format(_T("Failed to open registry key HKCU/%s:\n\t%d : %s"),
-			f_RegDir, retVal, GetSysError(retVal).c_str());
+			RegDir, retVal, GetSysError(retVal).c_str());
 		LogErrorString(msg);
 		return;
 	}
@@ -111,13 +110,13 @@ void PropShell::GetContextRegValues()
 	DWORD dwContextEnabled = reg.ReadDword(f_RegValueEnabled, 0);
 
 	if (dwContextEnabled & CONTEXT_F_ENABLED)
-		m_bContextAdded = TRUE;
+		m_bContextAdded = true;
 
 	if (dwContextEnabled & CONTEXT_F_ADVANCED)
-		m_bContextAdvanced = TRUE;
+		m_bContextAdvanced = true;
 
 	if (dwContextEnabled & CONTEXT_F_SUBFOLDERS)
-		m_bContextSubfolders = TRUE;
+		m_bContextSubfolders = true;
 }
 
 /// Set registry values for ShellExtension
@@ -135,11 +134,11 @@ void PropShell::SaveMergePath()
 	GetModuleFileName(AfxGetInstanceHandle(), temp, MAX_PATH);
 
 	CRegKeyEx reg;
-	retVal = reg.Open(HKEY_CURRENT_USER, f_RegDir);
+	retVal = reg.Open(HKEY_CURRENT_USER, RegDir);
 	if (retVal != ERROR_SUCCESS)
 	{
 		String msg = string_format(_T("Failed to open registry key HKCU/%s:\n\t%d : %s"),
-			f_RegDir, retVal, GetSysError(retVal).c_str());
+			RegDir, retVal, GetSysError(retVal).c_str());
 		LogErrorString(msg);
 		return;
 	}
@@ -188,7 +187,7 @@ void PropShell::AdvancedContextMenuCheck()
 	{
 		GetDlgItem(IDC_EXPLORER_ADVANCED)->EnableWindow(FALSE);
 		CheckDlgButton(IDC_EXPLORER_ADVANCED, FALSE);
-		m_bContextAdvanced = FALSE;
+		m_bContextAdvanced = false;
 	}
 }
 
@@ -201,6 +200,6 @@ void PropShell::SubfolderOptionCheck()
 	{
 		GetDlgItem(IDC_EXPLORER_SUBFOLDERS)->EnableWindow(FALSE);
 		CheckDlgButton(IDC_EXPLORER_SUBFOLDERS, FALSE);
-		m_bContextSubfolders = FALSE;
+		m_bContextSubfolders = false;
 	}
 }

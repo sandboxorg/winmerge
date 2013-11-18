@@ -46,7 +46,6 @@
 #include "ChildFrm.h"
 #include "unicoder.h"
 #include "MergeLineFlags.h"
-#include "PluginsListDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -221,7 +220,6 @@ BEGIN_MESSAGE_MAP(CMergeEditView, CCrystalEditViewEx)
 	ON_COMMAND(ID_VIEW_ZOOMIN, OnViewZoomIn)
 	ON_COMMAND(ID_VIEW_ZOOMOUT, OnViewZoomOut)
 	ON_COMMAND(ID_VIEW_ZOOMNORMAL, OnViewZoomNormal)
-	ON_COMMAND(ID_PLUGINS_LIST, OnPluginsList)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -970,7 +968,7 @@ void CMergeEditView::OnUpdateEditPaste(CCmdUI* pCmdUI)
  */
 void CMergeEditView::OnEditUndo()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_UNDO);
+	WaitStatusCursor waitstatus(_("Undoing the last operation..."));
 	CMergeDoc* pDoc = GetDocument();
 	CMergeEditView *tgt = *(pDoc->curUndo-1);
 	if(tgt==this)
@@ -1632,7 +1630,7 @@ void CMergeEditView::OnL2r()
 
 	if (firstDiff != -1 && lastDiff != -1 && (lastDiff >= firstDiff))
 	{
-		WaitStatusCursor waitstatus(IDS_STATUS_COPYL2R);
+		WaitStatusCursor waitstatus(_("Copying Left to Right"));
 		if (currentDiff != -1 && pDoc->m_diffList.IsDiffSignificant(currentDiff) && !IsSelection())
 			pDoc->ListCopy(srcPane, dstPane, currentDiff);
 		else
@@ -1640,7 +1638,7 @@ void CMergeEditView::OnL2r()
 	}
 	else if (currentDiff != -1 && pDoc->m_diffList.IsDiffSignificant(currentDiff))
 	{
-		WaitStatusCursor waitstatus(IDS_STATUS_COPYL2R);
+		WaitStatusCursor waitstatus(_("Copying Left to Right"));
 		pDoc->ListCopy(srcPane, dstPane, currentDiff);
 	}
 }
@@ -1713,7 +1711,7 @@ void CMergeEditView::OnR2l()
 
 	if (firstDiff != -1 && lastDiff != -1 && (lastDiff >= firstDiff))
 	{
-		WaitStatusCursor waitstatus(IDS_STATUS_COPYR2L);
+		WaitStatusCursor waitstatus(_("Copying Right to Left"));
 		if (currentDiff != -1 && pDoc->m_diffList.IsDiffSignificant(currentDiff) && !IsSelection())
 			pDoc->ListCopy(srcPane, dstPane, currentDiff);
 		else
@@ -1721,7 +1719,7 @@ void CMergeEditView::OnR2l()
 	}
 	else if (currentDiff != -1 && pDoc->m_diffList.IsDiffSignificant(currentDiff))
 	{
-		WaitStatusCursor waitstatus(IDS_STATUS_COPYR2L);
+		WaitStatusCursor waitstatus(_("Copying Right to Left"));
 		pDoc->ListCopy(srcPane, dstPane, currentDiff);
 	}
 }
@@ -1795,7 +1793,7 @@ void CMergeEditView::OnL2m()
 
 	if (firstDiff != -1 && lastDiff != -1 && (lastDiff >= firstDiff))
 	{
-		WaitStatusCursor waitstatus(IDS_STATUS_COPYL2M);
+		WaitStatusCursor waitstatus(_("Copying Left to Middle"));
 		if (currentDiff != -1 && pDoc->m_diffList.IsDiffSignificant(currentDiff) && !IsSelection())
 			pDoc->ListCopy(srcPane, dstPane, currentDiff);
 		else
@@ -1803,7 +1801,7 @@ void CMergeEditView::OnL2m()
 	}
 	else if (currentDiff != -1 && pDoc->m_diffList.IsDiffSignificant(currentDiff))
 	{
-		WaitStatusCursor waitstatus(IDS_STATUS_COPYL2M);
+		WaitStatusCursor waitstatus(_("Copying Left to Middle"));
 		pDoc->ListCopy(srcPane, dstPane, currentDiff);
 	}
 }
@@ -1879,7 +1877,7 @@ void CMergeEditView::OnR2m()
 
 	if (firstDiff != -1 && lastDiff != -1 && (lastDiff >= firstDiff))
 	{
-		WaitStatusCursor waitstatus(IDS_STATUS_COPYR2M);
+		WaitStatusCursor waitstatus(_("Copying Right to Middle"));
 		if (currentDiff != -1 && pDoc->m_diffList.IsDiffSignificant(currentDiff) && !IsSelection())
 			pDoc->ListCopy(srcPane, dstPane, currentDiff);
 		else
@@ -1887,7 +1885,7 @@ void CMergeEditView::OnR2m()
 	}
 	else if (currentDiff != -1 && pDoc->m_diffList.IsDiffSignificant(currentDiff))
 	{
-		WaitStatusCursor waitstatus(IDS_STATUS_COPYR2M);
+		WaitStatusCursor waitstatus(_("Copying Right to Middle"));
 		pDoc->ListCopy(srcPane, dstPane, currentDiff);
 	}
 }
@@ -1933,7 +1931,7 @@ void CMergeEditView::OnAllLeft()
 	int dstPane = m_nThisPane > 0 ? m_nThisPane - 1 : 0;
 	if (IsReadOnly(dstPane))
 		return;
-	WaitStatusCursor waitstatus(IDS_STATUS_COPYALL2L);
+	WaitStatusCursor waitstatus(_("Copying All to Left"));
 
 	GetDocument()->CopyAllList(srcPane, dstPane);
 }
@@ -1962,7 +1960,7 @@ void CMergeEditView::OnAllRight()
 	if (IsReadOnly(dstPane))
 		return;
 
-	WaitStatusCursor waitstatus(IDS_STATUS_COPYALL2R);
+	WaitStatusCursor waitstatus(_("Copying All to Right"));
 
 	GetDocument()->CopyAllList(srcPane, dstPane);
 }
@@ -2092,7 +2090,7 @@ void CMergeEditView::OnEditOperation(int nAction, LPCTSTR pszText, int cchText)
  */
 void CMergeEditView::OnEditRedo()
 {
-	WaitStatusCursor waitstatus(IDS_STATUS_REDO);
+	WaitStatusCursor waitstatus(_("Redoing the previous operation..."));
 	CMergeDoc* pDoc = GetDocument();
 	CMergeEditView *tgt = *(pDoc->curUndo);
 	if(tgt==this)
@@ -2669,7 +2667,7 @@ HMENU CMergeEditView::createScriptsSubmenu(HMENU hMenu)
 	if (functionNamesList.size() == 0)
 	{
 		// no script : create a <empty> entry
-		DoAppendMenu(hMenu, MF_STRING, ID_NO_EDIT_SCRIPTS, theApp.LoadString(ID_NO_EDIT_SCRIPTS).c_str());
+		DoAppendMenu(hMenu, MF_STRING, ID_NO_EDIT_SCRIPTS, _("< Empty >").c_str());
 	}
 	else
 	{
@@ -2682,7 +2680,7 @@ HMENU CMergeEditView::createScriptsSubmenu(HMENU hMenu)
 	}
 
 	if (!IsWindowsScriptThere())
-		DoAppendMenu(hMenu, MF_STRING, ID_NO_SCT_SCRIPTS, theApp.LoadString(ID_NO_SCT_SCRIPTS).c_str());
+		DoAppendMenu(hMenu, MF_STRING, ID_NO_SCT_SCRIPTS, _("WSH not found - .sct scripts disabled").c_str());
 
 	return hMenu;
 }
@@ -2711,7 +2709,7 @@ HMENU CMergeEditView::createPrediffersSubmenu(HMENU hMenu)
 	ASSERT(pd);
 
 	// title
-	DoAppendMenu(hMenu, MF_STRING, ID_NO_PREDIFFER, theApp.LoadString(ID_NO_PREDIFFER).c_str());
+	DoAppendMenu(hMenu, MF_STRING, ID_NO_PREDIFFER, _("No prediffer (normal)").c_str());
 
 	// get the scriptlet files
 	PluginArray * piScriptArray = 
@@ -2722,7 +2720,7 @@ HMENU CMergeEditView::createPrediffersSubmenu(HMENU hMenu)
 	// build the menu : first part, suggested plugins
 	// title
 	DoAppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-	DoAppendMenu(hMenu, MF_STRING, ID_SUGGESTED_PLUGINS, theApp.LoadString(ID_SUGGESTED_PLUGINS).c_str());
+	DoAppendMenu(hMenu, MF_STRING, ID_SUGGESTED_PLUGINS, _("Suggested plugins").c_str());
 
 	int ID = ID_PREDIFFERS_FIRST;	// first ID in menu
 	int iScript;
@@ -2746,7 +2744,7 @@ HMENU CMergeEditView::createPrediffersSubmenu(HMENU hMenu)
 	// build the menu : second part, others plugins
 	// title
 	DoAppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-	DoAppendMenu(hMenu, MF_STRING, ID_NOT_SUGGESTED_PLUGINS, theApp.LoadString(ID_NOT_SUGGESTED_PLUGINS).c_str());
+	DoAppendMenu(hMenu, MF_STRING, ID_NOT_SUGGESTED_PLUGINS, _("Other plugins").c_str());
 
 	ID = ID_PREDIFFERS_FIRST;	// first ID in menu
 	for (iScript = 0 ; iScript < piScriptArray->size() ; iScript++, ID ++)
@@ -2995,7 +2993,7 @@ void CMergeEditView::OnWMGoto()
 	nLastLine = pDoc->m_ptBuf[m_nThisPane]->ComputeRealLine(nLineCount - 1);
 
 	// Set active file and current line selected in dialog
-	dlg.m_strParam.Format(_T("%d"), nRealLine + 1);
+	dlg.m_strParam = string_to_str(nRealLine + 1);
 	dlg.m_nFile = (pDoc->m_nBuffers < 3) ? (m_nThisPane == 1 ? 2 : 0) : m_nThisPane;
 	dlg.m_nGotoWhat = 0;
 
@@ -3007,9 +3005,12 @@ void CMergeEditView::OnWMGoto()
 		// Get views
 		pCurrentView = GetGroupView(m_nThisPane);
 
+		int num = 0;
+		try { num = string_stoi(dlg.m_strParam) - 1; } catch(...) {}
+
 		if (dlg.m_nGotoWhat == 0)
 		{
-			int nRealLine = _ttoi(dlg.m_strParam) - 1;
+			int nRealLine = num;
 			if (nRealLine < 0)
 				nRealLine = 0;
 			if (nRealLine > nLastLine)
@@ -3019,7 +3020,7 @@ void CMergeEditView::OnWMGoto()
 		}
 		else
 		{
-			int diff = _ttoi(dlg.m_strParam) - 1;
+			int diff = num;
 			if (diff < 0)
 				diff = 0;
 			if (diff >= pDoc->m_diffList.GetSize())
@@ -3271,7 +3272,7 @@ void CMergeEditView::OnUpdateMergingMode(CCmdUI* pCmdUI)
  */
 void CMergeEditView::OnUpdateMergingStatus(CCmdUI *pCmdUI)
 {
-	String text = theApp.LoadString(IDS_MERGEMODE_MERGING);
+	String text = _("Merge");
 	pCmdUI->SetText(text.c_str());
 	pCmdUI->Enable(GetDocument()->GetMergingMode());
 }
@@ -3411,7 +3412,6 @@ void CMergeEditView::OnEditCopyLineNumbers()
 	CPoint ptEnd;
 	CString strText;
 	CString strLine;
-	CString strNum;
 	CString strNumLine;
 	UINT line = 0;
 	int nNumWidth = 0;
@@ -3421,8 +3421,7 @@ void CMergeEditView::OnEditCopyLineNumbers()
 
 	// Get last selected line (having widest linenumber)
 	line = pDoc->m_ptBuf[m_nThisPane]->ComputeRealLine(ptEnd.y);
-	strNum.Format(_T("%d"), line + 1);
-	nNumWidth = strNum.GetLength();
+	nNumWidth = string_to_str(line + 1).length();
 	
 	for (int i = ptStart.y; i <= ptEnd.y; i++)
 	{
@@ -3434,8 +3433,7 @@ void CMergeEditView::OnEditCopyLineNumbers()
 
 		// Insert spaces to align different width linenumbers (99, 100)
 		strLine = GetLineText(i);
-		strNum.Format(_T("%d"), line + 1);
-		CString sSpaces(' ', nNumWidth - strNum.GetLength());
+		CString sSpaces(' ', nNumWidth - string_to_str(line + 1).length());
 		
 		strText += sSpaces;
 		strNumLine.Format(_T("%d: %s"), line + 1, strLine);
@@ -4119,11 +4117,3 @@ void CMergeEditView::OnViewZoomNormal()
 	ZoomText(0);
 }
 
-/**
- * @brief Show the plugins list dialog.
- */
-void CMergeEditView::OnPluginsList()
-{
-	PluginsListDlg dlg;
-	dlg.DoModal();
-}
