@@ -16,6 +16,7 @@
 #include "FileOrFolderSelect.h"
 #include "Merge.h"
 #include "DirCmpReportDlg.h"
+#include "DDXHelper.h"
 
 IMPLEMENT_DYNAMIC(DirCmpReportDlg, CDialog)
 
@@ -24,8 +25,8 @@ IMPLEMENT_DYNAMIC(DirCmpReportDlg, CDialog)
  */
 DirCmpReportDlg::DirCmpReportDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(DirCmpReportDlg::IDD, pParent)
-	, m_bCopyToClipboard(FALSE)
-	, m_bIncludeFileCmpReport(FALSE)
+	, m_bCopyToClipboard(false)
+	, m_bIncludeFileCmpReport(false)
 {
 }
 
@@ -59,8 +60,8 @@ END_MESSAGE_MAP()
 struct ReportTypeInfo
 {
 	REPORT_TYPE reportType; /**< Report-type ID */
-	int idDisplay; /**< Resource-string ID (shown in file-selection dialog) */
-	int browseFilter; /**< File-extension filter (resource-string ID) */
+	const char *idDisplay; /**< Resource-string ID (shown in file-selection dialog) */
+	const char *browseFilter; /**< File-extension filter (resource-string ID) */
 };
 
 /**
@@ -69,20 +70,20 @@ struct ReportTypeInfo
  */
 static ReportTypeInfo f_types[] = {
 	{ REPORT_TYPE_COMMALIST,
-		IDS_REPORT_COMMALIST,
-		IDS_TEXT_REPORT_FILES
+		"Comma-separated list",
+		"Text Files (*.csv;*.asc;*.rpt;*.txt)|*.csv;*.asc;*.rpt;*.txt|All Files (*.*)|*.*||"
 	},
 	{ REPORT_TYPE_TABLIST,
-		IDS_REPORT_TABLIST,
-		IDS_TEXT_REPORT_FILES
+		"Tab-separated list",
+		"Text Files (*.csv;*.asc;*.rpt;*.txt)|*.csv;*.asc;*.rpt;*.txt|All Files (*.*)|*.*||"
 	},
 	{ REPORT_TYPE_SIMPLEHTML,
-		IDS_REPORT_SIMPLEHTML,
-		IDS_HTML_REPORT_FILES
+		"Simple HTML",
+		"HTML Files (*.htm,*.html)|*.htm;*.html|All Files (*.*)|*.*||"
 	},
 	{ REPORT_TYPE_SIMPLEXML,
-		IDS_REPORT_SIMPLEXML,
-		IDS_XML_REPORT_FILES
+		"Simple XML",
+		"XML Files (*.xml)|*.xml|All Files (*.*)|*.*||"
 	},
 };
 
@@ -96,13 +97,13 @@ BOOL DirCmpReportDlg::OnInitDialog()
 
 	m_ctlReportFile.LoadState(_T("ReportFiles"));
 	m_nReportType = static_cast<REPORT_TYPE>(theApp.GetProfileInt(_T("ReportFiles"), _T("ReportType"), 0));
-	m_bCopyToClipboard = theApp.GetProfileInt(_T("ReportFiles"), _T("CopoyToClipboard"), FALSE);
-	m_bIncludeFileCmpReport = theApp.GetProfileInt(_T("ReportFiles"), _T("IncludeFileCmpReport"), FALSE);
+	m_bCopyToClipboard = !!theApp.GetProfileInt(_T("ReportFiles"), _T("CopoyToClipboard"), false);
+	m_bIncludeFileCmpReport = !!theApp.GetProfileInt(_T("ReportFiles"), _T("IncludeFileCmpReport"), false);
 
 	for (int i = 0; i < sizeof(f_types) / sizeof(f_types[0]); ++i)
 	{
 		const ReportTypeInfo & info = f_types[i];
-		int ind = m_ctlStyle.InsertString(i, theApp.LoadString(info.idDisplay).c_str());
+		int ind = m_ctlStyle.InsertString(i, tr(info.idDisplay).c_str());
 		m_ctlStyle.SetItemData(ind, info.reportType);
 		if (info.reportType == m_nReportType)
 			m_ctlStyle.SetCurSel(m_nReportType);
@@ -114,7 +115,7 @@ BOOL DirCmpReportDlg::OnInitDialog()
 
 	// Set selected path to variable so file selection dialog shows
 	// correct filename and path.
-	m_ctlReportFile.GetWindowText(m_sReportFile);
+	m_ctlReportFile.GetWindowText(PopString(m_sReportFile));
 
 	UpdateData(FALSE);
 
@@ -129,14 +130,14 @@ void DirCmpReportDlg::OnBtnClickReportBrowse()
 {
 	UpdateData(TRUE);
 
-	CString folder = m_sReportFile;
-	int filterid = f_types[m_ctlStyle.GetCurSel()].browseFilter;
+	String folder = m_sReportFile;
+	String filter = tr(f_types[m_ctlStyle.GetCurSel()].browseFilter);
 
 	String chosenFilepath;
-	if (SelectFile(GetSafeHwnd(), chosenFilepath, folder, IDS_SAVE_AS_TITLE,
-			filterid, FALSE))
+	if (SelectFile(GetSafeHwnd(), chosenFilepath, folder.c_str(), _("Save As"),
+			filter, FALSE))
 	{
-		m_sReportFile = chosenFilepath.c_str();
+		m_sReportFile = chosenFilepath;
 		m_ctlReportFile.SetWindowText(chosenFilepath.c_str());
 	}
 }
@@ -165,16 +166,16 @@ void DirCmpReportDlg::OnOK()
 	int sel = m_ctlStyle.GetCurSel();
 	m_nReportType = (REPORT_TYPE)m_ctlStyle.GetItemData(sel);
 
-	if (m_sReportFile.IsEmpty() && !m_bCopyToClipboard)
+	if (m_sReportFile.empty() && !m_bCopyToClipboard)
 	{
 		LangMessageBox(IDS_MUST_SPECIFY_OUTPUT, MB_ICONSTOP);
 		m_ctlReportFile.SetFocus();
 		return;
 	}
 
-	if (!m_sReportFile.IsEmpty())
+	if (!m_sReportFile.empty())
 	{
-		if (paths_DoesPathExist((const TCHAR *)m_sReportFile) == IS_EXISTING_FILE)
+		if (paths_DoesPathExist(m_sReportFile) == IS_EXISTING_FILE)
 		{
 			int overWrite = LangMessageBox(IDS_REPORT_FILEOVERWRITE,
 					MB_YESNO | MB_ICONWARNING | MB_DONT_ASK_AGAIN,
