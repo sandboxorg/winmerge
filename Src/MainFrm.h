@@ -35,20 +35,8 @@
 #include "ToolBarXPThemes.h"
 #include "MDITabBar.h"
 #include "OptionsMgr.h"
-#include "VSSHelper.h"
 #include "PathContext.h"
 #include "MergeCmdLineInfo.h"
-
-/**
- * @brief Supported versioncontrol systems.
- */
-enum
-{
-	VCS_NONE = 0,
-	VCS_VSS4,
-	VCS_VSS5,
-	VCS_CLEARCASE,
-};
 
 /**
  * @brief Frame/View/Document types.
@@ -74,6 +62,7 @@ class SyntaxColors;
 class LineFiltersList;
 class TempFile;
 struct FileLocation;
+class SourceControl;
 
 typedef boost::shared_ptr<TempFile> TempFilePtr;
 
@@ -119,7 +108,7 @@ public:
 	int ShowMergeDoc(CDirDoc * pDirDoc, int nFiles, const FileLocation fileloc[],
 		DWORD dwFlags[], PackingInfo * infoUnpacker = NULL);
 	void ShowHexMergeDoc(CDirDoc * pDirDoc,
-		const PathContext &paths, bool bRO[]);
+		const PathContext &paths, const bool bRO[]);
 	void UpdateResources();
 	BOOL CreateBackup(BOOL bFolder, const String& pszPath);
 	int HandleReadonlySave(String& strSavePath, BOOL bMultiFile, BOOL &bApplyToAll);
@@ -128,10 +117,8 @@ public:
 	void ApplyViewWhitespace();
 	void SetEOLMixed(BOOL bAllow);
 	void SelectFilter();
-	void ShowVSSError(CException *e, const String& strItem);
 	void ShowHelp(LPCTSTR helpLocation = NULL);
 	void UpdateCodepageModule();
-	void CheckinToClearCase(const String& strDestinationPath);
 	static void CenterToMainFrame(CDialog * dlg);
 	static void SetMainIcon(CDialog * dlg);
 	void StartFlashing();
@@ -155,10 +142,6 @@ public:
 // Implementation methods
 protected:
 	virtual ~CMainFrame();
-// Implementation in SourceControl.cpp
-	void InitializeSourceControlMembers();
-	BOOL SaveToVersionControl(const String& strSavePath);
-// End SourceControl.cpp
 
 
 // Public implementation data
@@ -166,28 +149,12 @@ public:
 	BOOL m_bFirstTime; /**< If first time frame activated, get  pos from reg */
 	CString m_strSaveAsPath; /**< "3rd path" where output saved if given */
 	BOOL m_bEscShutdown; /**< If commandline switch -e given ESC closes appliction */
-	VSSHelper m_vssHelper; /**< Helper class for VSS integration */
 	SyntaxColors * GetMainSyntaxColors() { return m_pSyntaxColors.get(); }
 	BOOL m_bClearCaseTool; /**< WinMerge is executed as an external Rational ClearCase compare/merge tool. */
 	BOOL m_bFlashing; /**< Window is flashing. */
 	MergeCmdLineInfo::ExitNoDiff m_bExitIfNoDiff; /**< Exit if files are identical? */
 	boost::scoped_ptr<LineFiltersList> m_pLineFilters; /**< List of linefilters */
-
-	/**
-	 * @name Version Control System (VCS) integration.
-	 */
-	/*@{*/ 
-protected:
-	CString m_strVssUser; /**< Visual Source Safe User ID */
-	CString m_strVssPassword; /**< Visual Source Safe Password */
-	CString m_strVssDatabase; /**< Visual Source Safe database */
-	CString m_strCCComment; /**< ClearCase comment */
-public:
-	BOOL m_bCheckinVCS;     /**< TRUE if files should be checked in after checkout */
-	BOOL m_CheckOutMulti; /**< Suppresses VSS int. code asking checkout for every file */
-	BOOL m_bVCProjSync; /**< VC project opened from VSS sync? */
-	BOOL m_bVssSuppressPathCheck; /**< Suppresses VSS int code asking about different path */
-	/*@}*/
+	boost::scoped_ptr<SourceControl> m_pSourceControl;
 
 	/**
 	 * @name Textual labels/descriptors
