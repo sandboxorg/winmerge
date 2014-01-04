@@ -92,21 +92,12 @@ CDiffContext::~CDiffContext()
  * @param [in] bLeft Update left-side info.
  * @param [in] bRight Update right-side info.
  */
-void CDiffContext::UpdateStatusFromDisk(UIntPtr diffpos, bool bLeft, bool bRight)
+void CDiffContext::UpdateStatusFromDisk(UIntPtr diffpos, int index)
 {
 	DIFFITEM &di = GetDiffRefAt(diffpos);
-	if (bLeft)
-	{
-		di.diffFileInfo[0].ClearPartial();
-		if (!di.diffcode.isSideSecondOnly())
-			UpdateInfoFromDiskHalf(di, 0);
-	}
-	if (bRight)
-	{
-		di.diffFileInfo[1].ClearPartial();
-		if (!di.diffcode.isSideFirstOnly())
-			UpdateInfoFromDiskHalf(di, 1);
-	}
+	di.diffFileInfo[index].ClearPartial();
+	if (di.diffcode.isExists(index))
+		UpdateInfoFromDiskHalf(di, index);
 }
 
 /**
@@ -120,7 +111,7 @@ void CDiffContext::UpdateStatusFromDisk(UIntPtr diffpos, bool bLeft, bool bRight
  */
 bool CDiffContext::UpdateInfoFromDiskHalf(DIFFITEM & di, int nIndex)
 {
-	String filepath = paths_ConcatPath(di.getFilepath(nIndex, GetNormalizedPath(nIndex)), di.diffFileInfo[nIndex].GetFileName());
+	String filepath = paths_ConcatPath(di.getFilepath(nIndex, GetNormalizedPath(nIndex)), di.diffFileInfo[nIndex].filename);
 	DiffFileInfo & dfi = di.diffFileInfo[nIndex];
 	if (!dfi.Update(filepath))
 		return false;
@@ -159,7 +150,7 @@ static bool CheckFileForVersion(const String& ext)
  */
 void CDiffContext::UpdateVersion(DIFFITEM & di, int nIndex) const
 {
-	DiffFileInfo & dfi = nIndex == 0 ? di.diffFileInfo[0] : di.diffFileInfo[1];
+	DiffFileInfo & dfi = di.diffFileInfo[nIndex];
 	// Check only binary files
 	dfi.version.SetFileVersionNone();
 
@@ -167,26 +158,13 @@ void CDiffContext::UpdateVersion(DIFFITEM & di, int nIndex) const
 		return;
 	
 	String spath;
-	if (nIndex == 0)
-	{
-		if (di.diffcode.isSideSecondOnly())
-			return;
-		String ext = paths_FindExtension(di.diffFileInfo[0].GetFileName());
-		if (!CheckFileForVersion(ext))
-			return;
-		spath = di.getFilepath(0, GetNormalizedLeft());
-		spath = paths_ConcatPath(spath, di.diffFileInfo[0].GetFileName());
-	}
-	else
-	{
-		if (di.diffcode.isSideFirstOnly())
-			return;
-		String ext = paths_FindExtension(di.diffFileInfo[1].GetFileName());
-		if (!CheckFileForVersion(ext))
-			return;
-		spath = di.getFilepath(1, GetNormalizedRight());
-		spath = paths_ConcatPath(spath, di.diffFileInfo[1].GetFileName());
-	}
+	if (!di.diffcode.isExists(nIndex))
+		return;
+	String ext = paths_FindExtension(di.diffFileInfo[nIndex].filename);
+	if (!CheckFileForVersion(ext))
+		return;
+	spath = di.getFilepath(nIndex, GetNormalizedPath(nIndex));
+	spath = paths_ConcatPath(spath, di.diffFileInfo[nIndex].filename);
 	
 	// Get version info if it exists
 	CVersionInfo ver(spath.c_str());

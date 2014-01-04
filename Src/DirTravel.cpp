@@ -17,11 +17,11 @@
 #include "UnicodeString.h"
 #include "DirItem.h"
 #include "unicoder.h"
+#include "paths.h"
 
 using Poco::DirectoryIterator;
 using Poco::Timestamp;
-using Poco::Int64;
-using boost::shared_ptr;
+using boost::int64_t;
 
 static void LoadFiles(const String& sDir, DirItemArray * dirs, DirItemArray * files);
 static void Sort(DirItemArray * dirs, bool casesensitive);
@@ -80,12 +80,7 @@ static void LoadFiles(const String& sDir, DirItemArray * dirs, DirItemArray * fi
 	}
 
 #else
-	String sPattern(sDir);
-	size_t len = sPattern.length();
-	if (sPattern[len - 1] != '\\')
-		sPattern += _T("\\*.*");
-	else
-        sPattern += _T("*.*");
+	String sPattern = paths_ConcatPath(sDir, _T("*.*"));
 
 	WIN32_FIND_DATA ff;
 	HANDLE h = FindFirstFile(sPattern.c_str(), &ff);
@@ -114,7 +109,7 @@ static void LoadFiles(const String& sDir, DirItemArray * dirs, DirItemArray * fi
 				ent.size = -1;  // No size for directories
 			else
 			{
-				ent.size = ((Int64)ff.nFileSizeHigh << 32) + ff.nFileSizeLow;
+				ent.size = ((int64_t)ff.nFileSizeHigh << 32) + ff.nFileSizeLow;
 			}
 
 			ent.path = dir;
@@ -139,7 +134,7 @@ static int collate(const String &str1, const String &str2)
  */
 static bool __cdecl cmpstring(const DirItem &elem1, const DirItem &elem2)
 {
-	return collate(elem1.GetFileName(), elem2.GetFileName()) < 0;
+	return collate(elem1.filename, elem2.filename) < 0;
 }
 
 static int collate_ignore_case(const String &str1, const String &str2)
@@ -176,7 +171,7 @@ static int collate_ignore_case(const String &str1, const String &str2)
  */
 static bool __cdecl cmpistring(const DirItem &elem1, const DirItem &elem2)
 {
-	return collate_ignore_case(elem1.GetFileName(), elem2.GetFileName()) < 0;
+	return collate_ignore_case(elem1.filename, elem2.filename) < 0;
 }
 
 /**
