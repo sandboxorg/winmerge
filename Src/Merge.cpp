@@ -59,6 +59,8 @@
 #include "ConflictFileParser.h"
 #include "codepage.h"
 #include "JumpList.h"
+#include "paths.h"
+#include "Constants.h"
 
 // For shutdown cleanup
 #include "charsets.h"
@@ -73,9 +75,6 @@ static char THIS_FILE[] = __FILE__;
 
 /** @brief Location for command line help to open. */
 static TCHAR CommandLineHelpLocation[] = _T("::/htmlhelp/Command_line.html");
-
-// registry dir to WinMerge
-static String f_RegDir = _T("Software\\Thingamahoochie\\WinMerge");
 
 #ifndef WIN64
 /**
@@ -269,7 +268,7 @@ BOOL CMergeApp::InitInstance()
 #endif
 
 	// Load registry keys from WinMerge.reg if existing WinMerge.reg
-	env_LoadRegistryFromFile(env_GetProgPath() + _T("\\WinMerge.reg"));
+	env_LoadRegistryFromFile(paths_ConcatPath(env_GetProgPath(), _T("WinMerge.reg")));
 
 	OptionsInit(); // Implementation in OptionsInit.cpp
 
@@ -442,11 +441,18 @@ BOOL CMergeApp::InitInstance()
 	return bContinue;
 }
 
+static void OpenContributersFile(int&)
+{
+	GetMainFrame()->OpenFileToExternalEditor(paths_ConcatPath(env_GetProgPath(), ContributorsPath));
+}
+
 // App command to run the dialog
 void CMergeApp::OnAppAbout()
 {
 	CAboutDlg aboutDlg;
+	aboutDlg.m_onclick_contributers += Poco::delegate(OpenContributersFile);
 	aboutDlg.DoModal();
+	aboutDlg.m_onclick_contributers.clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -494,7 +500,7 @@ int CMergeApp::ExitInstance()
 	charsets_cleanup();
 
 	//  Save registry keys if existing WinMerge.reg
-	env_SaveRegistryToFile(env_GetProgPath() + _T("\\WinMerge.reg"), f_RegDir);
+	env_SaveRegistryToFile(paths_ConcatPath(env_GetProgPath(), _T("WinMerge.reg")), RegDir);
 
 	// Remove tempfolder
 	const String temp = env_GetTempPath();
@@ -765,9 +771,9 @@ bool CMergeApp::LoadProjectFile(const String& sProject, ProjectFile &project)
 	}
 	catch (Poco::Exception& e)
 	{
-		String sErr = theApp.LoadString(IDS_UNK_ERROR_READING_PROJECT);
+		String sErr = _("Unknown error attempting to open project file");
 		sErr += ucr::toTString(e.displayText());
-		String msg = LangFormatString2(IDS_ERROR_FILEOPEN, sProject.c_str(), sErr.c_str());
+		String msg = string_format_string2(_("Cannot open file\n%1\n\n%2"), sProject, sErr);
 		AfxMessageBox(msg.c_str(), MB_ICONSTOP);
 		return false;
 	}
@@ -783,9 +789,9 @@ bool CMergeApp::SaveProjectFile(const String& sProject, const ProjectFile &proje
 	}
 	catch (Poco::Exception& e)
 	{
-		String sErr = theApp.LoadString(IDS_UNK_ERROR_SAVING_PROJECT);
+		String sErr = _("Unknown error attempting to save project file");
 		sErr += ucr::toTString(e.displayText());
-		String msg = LangFormatString2(IDS_ERROR_FILEOPEN, sProject.c_str(), sErr.c_str());
+		String msg = string_format_string2(_("Cannot open file\n%1\n\n%2"), sProject, sErr);
 		AfxMessageBox(msg.c_str(), MB_ICONSTOP);
 		return false;
 	}
@@ -890,6 +896,11 @@ String CMergeApp::LoadString(UINT id) const
 	return m_pLangDlg->LoadString(id);
 }
 
+bool CMergeApp::TranslateString(const std::string& str, String& translated_str) const
+{
+	return m_pLangDlg->TranslateString(str, translated_str);
+}
+
 /**
  * @brief Load dialog caption and translate to current WinMerge GUI language
  */
@@ -912,9 +923,7 @@ void CMergeApp::ReloadMenu()
  */
 String CMergeApp::GetDefaultEditor()
 {
-	String path = env_GetWindowsDirectory();
-	path += _T("\\NOTEPAD.EXE");
-	return path;
+	return paths_ConcatPath(env_GetWindowsDirectory(), _T("NOTEPAD.EXE"));
 }
 
 /**

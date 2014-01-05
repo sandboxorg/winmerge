@@ -11,6 +11,7 @@
 #include "LineFiltersList.h"
 #include "MainFrm.h"
 #include "LineFiltersDlg.h"
+#include "DDXHelper.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -93,14 +94,14 @@ void LineFiltersDlg::InitList()
 	// Also enable infotips.
 	m_filtersList.SetExtendedStyle(LVS_EX_CHECKBOXES | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	String title = theApp.LoadString(IDS_FILTERLINE_REGEXP);
+	String title = _("Regular expression");
 	m_filtersList.InsertColumn(1, title.c_str(), LVCFMT_LEFT, 500);
 
-	int count = m_pList->GetCount();
-	for (int i = 0; i < count; i++)
+	size_t count = m_pList->GetCount();
+	for (size_t i = 0; i < count; i++)
 	{
 		const LineFilterItem &item = m_pList->GetAt(i);
-		AddRow(item.filterStr.c_str(), item.enabled);
+		AddRow(item.filterStr, item.enabled);
 	}
 	m_filtersList.SetItemState(0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
 	UpdateData(FALSE);
@@ -120,10 +121,10 @@ void LineFiltersDlg::OnHelp()
  * @param [in] enabled Is filter enabled?
  * @return Index of added row.
  */
-int LineFiltersDlg::AddRow(LPCTSTR filter /*= NULL*/, BOOL enabled /*=FALSE*/)
+int LineFiltersDlg::AddRow(const String& filter /*= NULL*/, bool enabled /*=false*/)
 {
 	int items = m_filtersList.GetItemCount();
-	int ind = m_filtersList.InsertItem(items, filter);
+	int ind = m_filtersList.InsertItem(items, filter.c_str());
 	m_filtersList.SetCheck(ind, enabled);
 	return ind;
 }
@@ -205,7 +206,7 @@ void LineFiltersDlg::OnBnClickedLfilterRemovebtn()
 	if (newSel >= -1)
 	{
 		m_filtersList.SetItemState(newSel, LVIS_SELECTED, LVIS_SELECTED);
-		BOOL bPartialOk = FALSE;
+		bool bPartialOk = false;
 		m_filtersList.EnsureVisible(newSel, bPartialOk);
 	}
 }
