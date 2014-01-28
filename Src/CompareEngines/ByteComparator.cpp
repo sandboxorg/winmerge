@@ -8,12 +8,12 @@
 
 #include "ByteComparator.h"
 #include <cassert>
-#include <Poco/Types.h>
+#include <boost/cstdint.hpp>
 #include "UnicodeString.h"
 #include "FileTextStats.h"
 #include "CompareOptions.h"
 
-using Poco::Int64;
+using boost::int64_t;
 
 /**
  * @brief Returns if given char is EOL byte.
@@ -48,7 +48,7 @@ static inline bool iswsch(TCHAR ch)
  * @param [in] offset Byte offset in whole file (among several buffers).
  */
 static void TextScan(FileTextStats & stats, const char *ptr, const char *end, bool eof,
-		bool crflag, Int64 offset)
+		bool crflag, int64_t offset)
 {
 	const char *start = ptr; // remember for recording zero-byte offsets
 
@@ -159,7 +159,7 @@ ByteComparator::ByteComparator(const QuickCompareOptions * options)
  */
 ByteComparator::COMP_RESULT ByteComparator::CompareBuffers(
 	FileTextStats & stats0, FileTextStats & stats1, const char* &ptr0, const char* &ptr1,
-	const char* end0, const char* end1, bool eof0, bool eof1, Int64 offset0, Int64 offset1)
+	const char* end0, const char* end1, bool eof0, bool eof1, int64_t offset0, int64_t offset1)
 {
 	ByteComparator::COMP_RESULT result = RESULT_SAME;
 
