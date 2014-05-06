@@ -9,8 +9,7 @@
 #ifndef FileTextStats_h_included
 #define FileTextStats_h_included
 
-#define POCO_NO_UNWINDOWS 1
-#include <Poco/Types.h>
+#include <boost/cstdint.hpp>
 
 /**
  * @brief Structure containing statistics about compared file.

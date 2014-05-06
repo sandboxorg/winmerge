@@ -52,7 +52,7 @@ BOOL PluginsListDlg::OnInitDialog()
 	InitList();
 	AddPlugins();
 
-	BOOL pluginsEnabled = GetOptionsMgr()->GetBool(OPT_PLUGINS_ENABLED);
+	bool pluginsEnabled = GetOptionsMgr()->GetBool(OPT_PLUGINS_ENABLED);
 	if (pluginsEnabled)
 	{
 		CButton *btn = (CButton *)GetDlgItem(IDC_PLUGINS_ENABLE);
@@ -72,11 +72,11 @@ void PluginsListDlg::InitList()
 	// Also enable infotips.
 	m_list.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-	String title = LoadResString(IDS_PLUGINSLIST_NAME);
+	String title = _("Name");
 	m_list.InsertColumn(0, title.c_str(), LVCFMT_LEFT, 150);
-	title = LoadResString(IDS_PLUGINSLIST_TYPE);
+	title = _("Type");
 	m_list.InsertColumn(1, title.c_str(), LVCFMT_LEFT, 100);
-	title = LoadResString(IDS_PLUGINSLIST_DESC);
+	title = _("Description");
 	m_list.InsertColumn(2, title.c_str(), LVCFMT_LEFT, 300);
 }
 
@@ -85,14 +85,14 @@ void PluginsListDlg::InitList()
  */
 void PluginsListDlg::AddPlugins()
 {
-	String type = LoadResString(IDS_PLUGINS_TYPE_UNPACKER);
-	AddPluginsToList(L"FILE_PACK_UNPACK", type.c_str());
-	AddPluginsToList(L"BUFFER_PACK_UNPACK", type.c_str());
-	type = LoadResString(IDS_PLUGINS_TYPE_PREDIFFER);
-	AddPluginsToList(L"FILE_PREDIFF", type.c_str());
-	AddPluginsToList(L"BUFFER_PREDIFF", type.c_str());
-	type = LoadResString(IDS_PLUGINS_TYPE_EDITSCRIPT);
-	AddPluginsToList(L"EDITOR_SCRIPT", type.c_str());
+	String type = _("Unpacker");
+	AddPluginsToList(L"FILE_PACK_UNPACK", type);
+	AddPluginsToList(L"BUFFER_PACK_UNPACK", type);
+	type = _("Prediffer");
+	AddPluginsToList(L"FILE_PREDIFF", type);
+	AddPluginsToList(L"BUFFER_PREDIFF", type);
+	type = _("Editor script");
+	AddPluginsToList(L"EDITOR_SCRIPT", type);
 }
 
 /**
@@ -100,7 +100,7 @@ void PluginsListDlg::AddPlugins()
  * @param [in] pluginEvent Event type for plugins to add.
  * @param [in] pluginType String to use as type in the list.
  */
-void PluginsListDlg::AddPluginsToList(LPCWSTR pluginEvent, LPCTSTR pluginType)
+void PluginsListDlg::AddPluginsToList(const wchar_t *pluginEvent, const String& pluginType)
 {
 	PluginArray * piPluginArray = 
 		CAllThreadsScripts::GetActiveSet()->GetAvailableScripts(pluginEvent);
@@ -109,7 +109,7 @@ void PluginsListDlg::AddPluginsToList(LPCWSTR pluginEvent, LPCTSTR pluginType)
 	{
 		const PluginInfoPtr& plugin = piPluginArray->at(iPlugin);
 		int ind = m_list.InsertItem(m_list.GetItemCount(), plugin->m_name.c_str());
-		m_list.SetItemText(ind, 1, pluginType);
+		m_list.SetItemText(ind, 1, pluginType.c_str());
 		m_list.SetItemText(ind, 2, plugin->m_description.c_str());
 	}
 }

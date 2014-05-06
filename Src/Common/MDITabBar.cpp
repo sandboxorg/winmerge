@@ -108,9 +108,9 @@ void CMDITabBar::OnContextMenu(CWnd *pWnd, CPoint point)
 	if (!pPopup->GetMenuItemInfo(ID_CLOSE_OTHER_TABS, &mii, FALSE))
 	{
 		pPopup->AppendMenu(MF_SEPARATOR, 0, _T(""));
-		pPopup->AppendMenu(MF_STRING, ID_CLOSE_OTHER_TABS, LoadResString(IDS_CLOSE_OTHER_TABS).c_str());
-		pPopup->AppendMenu(MF_STRING, ID_CLOSE_RIGHT_TABS, LoadResString(IDS_CLOSE_RIGHT_TABS).c_str());
-		pPopup->AppendMenu(MF_STRING, ID_CLOSE_LEFT_TABS, LoadResString(IDS_CLOSE_LEFT_TABS).c_str());
+		pPopup->AppendMenu(MF_STRING, ID_CLOSE_OTHER_TABS, _("Close &Other Tabs").c_str());
+		pPopup->AppendMenu(MF_STRING, ID_CLOSE_RIGHT_TABS, _("Close R&ight Tabs").c_str());
+		pPopup->AppendMenu(MF_STRING, ID_CLOSE_LEFT_TABS, _("Close &Left Tabs").c_str());
 	}
 	// invoke context menu
 	int command = pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD, point.x, point.y,
