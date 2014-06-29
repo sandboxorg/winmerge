@@ -48,6 +48,7 @@ class SyntaxColors;
 class LineFiltersList;
 class TempFile;
 struct FileLocation;
+class SourceControl;
 
 typedef boost::shared_ptr<TempFile> TempFilePtr;
 
@@ -104,7 +105,7 @@ public:
 	int ShowMergeDoc(CDirDoc * pDirDoc, int nFiles, const FileLocation fileloc[],
 		DWORD dwFlags[], PackingInfo * infoUnpacker = NULL);
 	void ShowHexMergeDoc(CDirDoc * pDirDoc,
-		const PathContext &paths, bool bRO[]);
+		const PathContext &paths, const bool bRO[]);
 	void UpdateResources();
 	CString SetStatus(LPCTSTR status);
 	void ClearStatusbarItemCount();
@@ -131,6 +132,7 @@ public:
 // Implementation methods
 protected:
 	virtual ~CMainFrame();
+
 
 // Public implementation data
 public:

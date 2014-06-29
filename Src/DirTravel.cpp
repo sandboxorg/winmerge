@@ -17,10 +17,11 @@
 #include "UnicodeString.h"
 #include "DirItem.h"
 #include "unicoder.h"
+#include "paths.h"
 
 using Poco::DirectoryIterator;
 using Poco::Timestamp;
-using Poco::Int64;
+using boost::int64_t;
 
 static void LoadFiles(const String& sDir, DirItemArray * dirs, DirItemArray * files);
 static void Sort(DirItemArray * dirs, bool casesensitive);
@@ -79,12 +80,7 @@ static void LoadFiles(const String& sDir, DirItemArray * dirs, DirItemArray * fi
 	}
 
 #else
-	String sPattern(sDir);
-	size_t len = sPattern.length();
-	if (sPattern[len - 1] != '\\')
-		sPattern += _T("\\*.*");
-	else
-        sPattern += _T("*.*");
+	String sPattern = paths_ConcatPath(sDir, _T("*.*"));
 
 	WIN32_FIND_DATA ff;
 	HANDLE h;
@@ -122,7 +118,7 @@ static void LoadFiles(const String& sDir, DirItemArray * dirs, DirItemArray * fi
 				ent.size = -1;  // No size for directories
 			else
 			{
-				ent.size = ((Int64)ff.nFileSizeHigh << 32) + ff.nFileSizeLow;
+				ent.size = ((int64_t)ff.nFileSizeHigh << 32) + ff.nFileSizeLow;
 			}
 
 			ent.path = dir;

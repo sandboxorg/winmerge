@@ -142,6 +142,9 @@
     <ClCompile Include="FolderCmp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LineFiltersList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="locality.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -197,9 +200,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Common\ShellFileOperations.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ssapi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stringdiffs.cpp">
@@ -472,9 +472,6 @@
     <ClCompile Include="DiffViewBar.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirActions.cpp">
-      <Filter>MFCGui\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DirDoc.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
@@ -482,12 +479,6 @@
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DirView.cpp">
-      <Filter>MFCGui\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirViewColHandler.cpp">
-      <Filter>MFCGui\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirViewColItems.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EditorFilepathBar.cpp">
@@ -736,10 +727,16 @@
     <ClCompile Include="Splash.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LineFiltersList.cpp">
+    <ClCompile Include="CustomStatusCursor.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Common\ClipBoard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirActions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirViewColItems.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OptionsCustomColors.cpp">
@@ -924,9 +921,6 @@
     <ClInclude Include="Common\ShellFileOperations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ssapi.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="stringdiffs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1059,9 +1053,6 @@
     <ClInclude Include="..\Externals\crystaledit\editlib\wispelld.h">
       <Filter>EditLib</Filter>
     </ClInclude>
-    <ClInclude Include="WaitStatusCursor.h">
-      <Filter>MFCGui\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Common\ToolbarXPThemes.h">
       <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
@@ -1161,6 +1152,9 @@
     <ClInclude Include="FileOrFolderSelect.h">
       <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="7zCommon.h">
+      <Filter>MFCGui\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="BCMenu.h">
       <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
@@ -1186,9 +1180,6 @@
       <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DirView.h">
-      <Filter>MFCGui\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirViewColItems.h">
       <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EditorFilepathBar.h">
@@ -1353,8 +1344,32 @@
     <ClInclude Include="Common\DragDrop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="7zCommon.h">
-      <Filter>MFCGui\Source Files</Filter>
+    <ClInclude Include="ssauto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\MyCom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceControl.h">
+      <Filter>MFCGui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DDXHelper.h">
+      <Filter>MFCGui\Dialogs</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomStatusCursor.h">
+      <Filter>MFCGui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirActions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirItemIterator.h">
+      <Filter>MFCGui\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirViewColItems.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WaitStatusCursor.h">
+      <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Common\ClipBoard.h">
       <Filter>Header Files</Filter>
