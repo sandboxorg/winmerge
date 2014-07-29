@@ -264,7 +264,7 @@ protected:
 	afx_msg void OnUpdateAllRight(CCmdUI* pCmdUI);
 	afx_msg void OnAutoMerge();
 	afx_msg void OnUpdateAutoMerge(CCmdUI* pCmdUI);
-	afx_msg void OnX2Y(int srcPane, int dstPane, int idMessage);
+	afx_msg void OnX2Y(int srcPane, int dstPane, const String& message);
 	afx_msg void OnUpdateX2Y(int dstPane, CCmdUI* pCmdUI);
 	afx_msg void OnL2r();
 	afx_msg void OnUpdateL2r(CCmdUI* pCmdUI);
@@ -346,7 +346,6 @@ protected:
 	afx_msg void OnViewZoomIn();
 	afx_msg void OnViewZoomOut();
 	afx_msg void OnViewZoomNormal();
-	afx_msg void OnPluginsList();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
