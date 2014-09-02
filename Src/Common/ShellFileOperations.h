@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <Windows.h>
+#include <ShellAPI.h>
 #include "UnicodeString.h"
 
 /**
