@@ -1,0 +1,4 @@
+Externals/frhed = frhed
+
+[subpaths]
+https://bitbucket\.org/sdottaka/winmerge-v2/frhed = https://bitbucket.org/sdottaka/frhed
