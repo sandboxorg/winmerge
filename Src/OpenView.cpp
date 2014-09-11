@@ -246,7 +246,7 @@ void COpenView::OnInitialUpdate()
 
 	if (!bMask)
 	{
-		String filterPrefix = theApp.LoadString(IDS_FILTER_PREFIX);
+		String filterPrefix = _("[F] ");
 		filterNameOrMask = filterPrefix + filterNameOrMask;
 	}
 
@@ -444,7 +444,7 @@ void COpenView::OnSwapButton()
 void COpenView::OnOK() 
 {
 	int pathsType; // enum from PATH_EXISTENCE in paths.h
-	const String filterPrefix = theApp.LoadString(IDS_FILTER_PREFIX);
+	const String filterPrefix = _("[F] ");
 
 	UpdateData(TRUE);
 	TrimPaths();
@@ -487,10 +487,7 @@ void COpenView::OnOK()
 	
 			// Add trailing '\' for directories if its missing
 			if (paths_DoesPathExist(m_files[index]) == IS_EXISTING_DIR)
-			{
-				if (!paths_EndsWithSlash(m_files[index]))
-					m_files[index] += '\\';
-			}
+				m_files[index] = paths_AddTrailingSlash(m_files[index]);
 		}
 	}
 
@@ -841,7 +838,7 @@ void COpenView::OnSelectUnpacker()
 		return;
 
 	// let the user select a handler
-	CSelectUnpackerDlg dlg(m_files[0].c_str(), this);
+	CSelectUnpackerDlg dlg(m_files[0], this);
 	PackingInfo infoUnpacker(PLUGIN_AUTO);
 	dlg.SetInitialInfoHandler(&infoUnpacker);
 
@@ -898,7 +895,7 @@ void COpenView::SetUnpackerStatus(UINT msgID)
  */
 void COpenView::OnSelectFilter()
 {
-	String filterPrefix = theApp.LoadString(IDS_FILTER_PREFIX);
+	String filterPrefix = _("[F] ");
 	CString curFilter;
 
 	const BOOL bUseMask = theApp.m_pGlobalFileFilter->IsUsingMask();
@@ -936,7 +933,7 @@ void COpenView::OnSelectFilter()
  */
 BOOL COpenView::LoadProjectFile(const String &path)
 {
-	String filterPrefix = theApp.LoadString(IDS_FILTER_PREFIX);
+	String filterPrefix = _("[F] ");
 	ProjectFile prj;
 
 	if (!theApp.LoadProjectFile(path, prj))

@@ -1053,6 +1053,47 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="DirActions.cpp">
+				<FileConfiguration
+					Name="UnicodeRelease|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="1"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						UsePrecompiledHeader="0"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="UnicodeDebug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						UsePrecompiledHeader="0"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						UsePrecompiledHeader="0"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="1"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						UsePrecompiledHeader="0"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="DirCmpReport.cpp">
 				<FileConfiguration
 					Name="UnicodeRelease|Win32">
@@ -1181,6 +1222,47 @@
 			</File>
 			<File
 				RelativePath="DirTravel.cpp">
+				<FileConfiguration
+					Name="UnicodeRelease|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="1"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						UsePrecompiledHeader="0"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="UnicodeDebug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						UsePrecompiledHeader="0"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						UsePrecompiledHeader="0"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="1"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						UsePrecompiledHeader="0"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="DirViewColItems.cpp">
 				<FileConfiguration
 					Name="UnicodeRelease|Win32">
 					<Tool
@@ -2795,43 +2877,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="ssapi.cpp">
-				<FileConfiguration
-					Name="UnicodeRelease|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="1"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="UnicodeDebug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="1"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="stringdiffs.cpp">
 				<FileConfiguration
 					Name="UnicodeRelease|Win32">
@@ -3301,6 +3346,9 @@
 				RelativePath="DirTravel.h">
 			</File>
 			<File
+				RelativePath="DirViewColItems.h">
+			</File>
+			<File
 				RelativePath="Common\dllproxy.h">
 			</File>
 			<File
@@ -3385,6 +3433,9 @@
 				RelativePath="Common\multiformatText.h">
 			</File>
 			<File
+				RelativePath=".\Common\MyCom.h">
+			</File>
+			<File
 				RelativePath=".\OptionsCustomColors.h">
 			</File>
 			<File
@@ -3434,6 +3485,9 @@
 			</File>
 			<File
 				RelativePath="ssapi.h">
+			</File>
+			<File
+				RelativePath=".\ssauto.h">
 			</File>
 			<File
 				RelativePath="stringdiffs.h">
@@ -4802,6 +4856,9 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\CustomStatusCursor.cpp">
+				</File>
+				<File
 					RelativePath="DiffTextBuffer.cpp">
 					<FileConfiguration
 						Name="UnicodeRelease|Win32">
@@ -4840,43 +4897,6 @@
 				</File>
 				<File
 					RelativePath="DiffViewBar.cpp">
-					<FileConfiguration
-						Name="UnicodeRelease|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="UnicodeDebug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="DirActions.cpp">
 					<FileConfiguration
 						Name="UnicodeRelease|Win32">
 						<Tool
@@ -5024,80 +5044,6 @@
 							Optimization="1"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions="WIN32;_WINDOWS;_STATIC_CPPLIB;POCO_STATIC;_MBCS;_AFXDLL;EDITPADC_CLASS=;COMPILE_MULTIMON_STUBS;$(NoInherit)"/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="DirViewColHandler.cpp">
-					<FileConfiguration
-						Name="UnicodeRelease|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="UnicodeDebug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="DirViewColItems.cpp">
-					<FileConfiguration
-						Name="UnicodeRelease|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="UnicodeDebug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="0"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-							BrowseInformation="1"/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32">
-						<Tool
-							Name="VCCLCompilerTool"
-							Optimization="1"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
 					</FileConfiguration>
 				</File>
 				<File
@@ -6175,7 +6121,8 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
+							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="UnicodeDebug|Win32">
@@ -6184,6 +6131,7 @@
 							Optimization="0"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -6193,6 +6141,7 @@
 							Optimization="0"
 							AdditionalIncludeDirectories=""
 							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"
 							BrowseInformation="1"/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -6201,7 +6150,8 @@
 							Name="VCCLCompilerTool"
 							Optimization="1"
 							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""/>
+							PreprocessorDefinitions=""
+							UsePrecompiledHeader="0"/>
 					</FileConfiguration>
 				</File>
 				<File
@@ -6493,6 +6443,9 @@
 					RelativePath="Common\CSubclass.h">
 				</File>
 				<File
+					RelativePath=".\CustomStatusCursor.h">
+				</File>
+				<File
 					RelativePath="DiffTextBuffer.h">
 				</File>
 				<File
@@ -6506,9 +6459,6 @@
 				</File>
 				<File
 					RelativePath="DirView.h">
-				</File>
-				<File
-					RelativePath="DirViewColItems.h">
 				</File>
 				<File
 					RelativePath=".\Common\DragDrop.h">
@@ -6632,6 +6582,9 @@
 				</File>
 				<File
 					RelativePath="Common\SortHeaderCtrl.h">
+				</File>
+				<File
+					RelativePath=".\SourceControl.h">
 				</File>
 				<File
 					RelativePath="Splash.h">
