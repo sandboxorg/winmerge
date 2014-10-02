@@ -1,4 +1,8 @@
 Externals/frhed = frhed
+Externals/freeimage = freeimage
+Externals/winimerge = winimerge
 
 [subpaths]
 https://bitbucket\.org/sdottaka/winmerge-v2/frhed = https://bitbucket.org/sdottaka/frhed
+https://bitbucket\.org/sdottaka/winmerge-v2/freeimage = https://bitbucket.org/sdottaka/freeimage
+https://bitbucket\.org/sdottaka/winmerge-v2/winimerge = https://bitbucket.org/sdottaka/winimerge
