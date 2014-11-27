@@ -24,6 +24,7 @@
 #include "ImgMergeFrm.h"
 #include "paths.h"
 #include "Environment.h"
+#include "unicoder.h"
 
 // Escaped character constants in range 0x80-0xFF are interpreted in current codepage
 // Using C locale gets us direct mapping to Unicode codepoints
@@ -36,7 +37,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /** @brief Relative path to WinMerge executable for lang files. */
-static const TCHAR szRelativePath[] = _T("\\Languages\\");
+static const TCHAR szRelativePath[] = _T("Languages");
 
 static char *EatPrefix(char *text, const char *prefix);
 static void unslash(unsigned codepage, std::string &s);
@@ -685,6 +686,8 @@ BOOL CLanguageSelect::LoadLanguageFile(LANGID wLangId)
 				// avoid dereference of empty vector or last vector
 				if (lines.size() > 0)
 				{
+					unslash(0, msgid);
+					m_map_lineno.insert(std::make_pair(msgid, lines[0]));
 					for (unsigned *pline = &*lines.begin() ; pline <= &*(lines.end() - 1) ; ++pline)
 					{
 						unsigned line = *pline;
@@ -759,6 +762,8 @@ BOOL CLanguageSelect::LoadLanguageFile(LANGID wLangId)
 			else
 			{
 				ps = 0;
+				if (!msgid.empty())
+					unslash(0, msgid);
 				if (msgstr.empty())
 					msgstr = msgid;
 				unslash(m_codepage, msgstr);
@@ -793,6 +798,7 @@ BOOL CLanguageSelect::LoadLanguageFile(LANGID wLangId)
 		FreeLibrary(m_hCurrentDll);
 		m_hCurrentDll = 0;
 		m_strarray.clear();
+		m_map_lineno.clear();
 		m_codepage = 0;
 		if (m_hWnd)
 		{
@@ -826,6 +832,7 @@ BOOL CLanguageSelect::SetLanguage(LANGID wLangId)
 		m_hCurrentDll = NULL;
 	}
 	m_strarray.clear();
+	m_map_lineno.clear();
 	m_codepage = 0;
 	if (wLangId != wSourceLangId)
 	{
@@ -849,13 +856,13 @@ BOOL CLanguageSelect::SetLanguage(LANGID wLangId)
 String CLanguageSelect::GetFileName(LANGID wLangId) const
 {
 	String filename;
-	String path = env_GetProgPath().append(szRelativePath);
-	String pattern = path + _T("*.po");
+	String path = paths_ConcatPath(env_GetProgPath(), szRelativePath);
+	String pattern = paths_ConcatPath(path, _T("*.po"));
 	WIN32_FIND_DATA ff;
 	HANDLE h = INVALID_HANDLE_VALUE;
 	while ((h = FindFile(h, pattern.c_str(), &ff)) != INVALID_HANDLE_VALUE)
 	{
-		filename = path + ff.cFileName;
+		filename = paths_ConcatPath(path, ff.cFileName);
 		LangFileInfo lfi = filename.c_str();
 		if (lfi.id == wLangId)
 			ff.dwFileAttributes = INVALID_FILE_ATTRIBUTES; // terminate loop
@@ -879,8 +886,8 @@ String CLanguageSelect::GetFileName(LANGID wLangId) const
 BOOL CLanguageSelect::AreLangsInstalled() const
 {
 	BOOL bFound = FALSE;
-	String path = env_GetProgPath().append(szRelativePath);
-	String pattern = path + _T("*.po");
+	String path = paths_ConcatPath(env_GetProgPath(), szRelativePath);
+	String pattern = paths_ConcatPath(path, _T("*.po"));
 	WIN32_FIND_DATA ff;
 	HANDLE h = INVALID_HANDLE_VALUE;
 	while ((h = FindFile(h, pattern.c_str(), &ff)) != INVALID_HANDLE_VALUE)
@@ -903,11 +910,11 @@ bool CLanguageSelect::TranslateString(size_t line, std::string &s) const
 		if (m_codepage != codepage)
 		{
 			// Attempt to convert to UI codepage
-			if (int len = static_cast<int>(s.length()))
+			if (size_t len = s.length())
 			{
 				std::wstring ws;
 				ws.resize(len);
-				len = MultiByteToWideChar(m_codepage, 0, s.c_str(), -1, &*ws.begin(), len + 1);
+				len = MultiByteToWideChar(m_codepage, 0, s.c_str(), -1, &*ws.begin(), static_cast<int>(len) + 1);
 				if (len)
 				{
 					ws.resize(len - 1);
@@ -915,7 +922,7 @@ bool CLanguageSelect::TranslateString(size_t line, std::string &s) const
 					if (len)
 					{
 						s.resize(len - 1);
-						WideCharToMultiByte(codepage, 0, ws.c_str(), -1, &*s.begin(), len, 0, 0);
+						WideCharToMultiByte(codepage, 0, ws.c_str(), -1, &*s.begin(), static_cast<int>(len), 0, 0);
 					}
 				}
 			}
@@ -929,15 +936,26 @@ bool CLanguageSelect::TranslateString(size_t line, std::wstring &ws) const
 {
 	if (line > 0 && line < m_strarray.size())
 	{
-		if (int len = static_cast<int>(m_strarray[line].length()))
+		if (size_t len = m_strarray[line].length())
 		{
 			ws.resize(len);
 			const char *msgstr = m_strarray[line].c_str();
-			len = MultiByteToWideChar(m_codepage, 0, msgstr, -1, &*ws.begin(), len + 1);
+			len = MultiByteToWideChar(m_codepage, 0, msgstr, -1, &*ws.begin(), static_cast<int>(len) + 1);
 			ws.resize(len - 1);
 			return true;
 		}
 	}
+	return false;
+}
+
+bool CLanguageSelect::TranslateString(const std::string& str, String &translated_str) const
+{
+	EngLinenoMap::const_iterator it = m_map_lineno.find(str);
+	if (it != m_map_lineno.end())
+	{
+		return TranslateString(it->second, translated_str);
+	}
+	translated_str = ucr::toTString(str);
 	return false;
 }
 
@@ -1251,8 +1269,8 @@ BOOL CLanguageSelect::OnInitDialog()
  */
 void CLanguageSelect::LoadAndDisplayLanguages()
 {
-	String path = env_GetProgPath().append(szRelativePath);
-	String pattern = path + _T("*.po");
+	String path = paths_ConcatPath(env_GetProgPath(), szRelativePath);
+	String pattern = paths_ConcatPath(path, _T("*.po"));
 	WIN32_FIND_DATA ff;
 	HANDLE h = INVALID_HANDLE_VALUE;
 	do
@@ -1260,7 +1278,7 @@ void CLanguageSelect::LoadAndDisplayLanguages()
 		LangFileInfo &lfi =
 			h == INVALID_HANDLE_VALUE
 		?	LangFileInfo(wSourceLangId)
-		:	LangFileInfo((path + ff.cFileName).c_str());
+		:	LangFileInfo(paths_ConcatPath(path, ff.cFileName).c_str());
 		std_tchar(ostringstream) stm;
 		stm << lfi.GetString(LOCALE_SLANGUAGE).c_str();
 		stm << _T(" - ");
