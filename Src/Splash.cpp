@@ -235,8 +235,7 @@ void CSplashWnd::OnPaint()
 	if (fontSuccess)
 		oldfont = dc.SelectObject(&versionFont);
 
-	CString sVersion = version.GetFixedProductVersion().c_str();
-	s = LangFormatString1(IDS_VERSION_FMT, sVersion);
+	s = string_format_string1(_("Version %1"), version.GetFixedProductVersion());
 	dc.SetBkMode(TRANSPARENT);
 	
 	RECT area = VersionTextArea;
@@ -255,7 +254,7 @@ void CSplashWnd::OnPaint()
 			dc.SelectObject(&textFont);
 	}
 
-	String text = LoadResString(IDS_SPLASH_DEVELOPERS);
+	String text = _("Developers:\nDean Grimm, Christian List, Kimmo Varis, Jochen Tucht, Tim Gerundt, Takashi Sawanaki, Gal Hammer, Alexander Skinner");
 
 	// avoid dereference of empty strings and the NULL termiated character
 	if (text.length() >= 0)
@@ -286,7 +285,7 @@ void CSplashWnd::OnPaint()
 			dc.SelectObject(&copyrightFont);
 	}
 
-	text = LoadResString(IDS_SPLASH_GPLTEXT);
+	text = _("WinMerge comes with ABSOLUTELY NO WARRANTY. This is free software and you are welcome to redistribute it under certain circumstances; see the GNU General Public License in the Help menu for details.");
 	area = CopyrightArea;
 	dc.DrawText(text.c_str(), &area, CopyrightTextStyle);
 

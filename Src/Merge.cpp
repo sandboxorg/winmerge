@@ -67,7 +67,9 @@
 #include "JumpList.h"
 #include "stringdiffs.h"
 #include "TFile.h"
-#include "VSSHelper.h"
+#include "SourceControl.h"
+#include "paths.h"
+#include "Constants.h"
 
 // For shutdown cleanup
 #include "charsets.h"
@@ -211,10 +213,7 @@ CMergeApp::CMergeApp() :
 , m_bExitIfNoDiff(MergeCmdLineInfo::Disabled)
 , m_pLineFilters(new LineFiltersList())
 , m_pSyntaxColors(new SyntaxColors())
-, m_pVssHelper(new VSSHelper())
-, m_CheckOutMulti(FALSE)
-, m_bVCProjSync(FALSE)
-, m_bVssSuppressPathCheck(FALSE)
+, m_pSourceControl(new SourceControl())
 , m_bMergingMode(FALSE)
 {
 	// add construction code here,
@@ -296,7 +295,7 @@ BOOL CMergeApp::InitInstance()
 #endif
 
 	// Load registry keys from WinMerge.reg if existing WinMerge.reg
-	env_LoadRegistryFromFile(env_GetProgPath() + _T("\\WinMerge.reg"));
+	env_LoadRegistryFromFile(paths_ConcatPath(env_GetProgPath(), _T("WinMerge.reg")));
 
 	OptionsInit(); // Implementation in OptionsInit.cpp
 
@@ -376,7 +375,9 @@ BOOL CMergeApp::InitInstance()
 
 	UpdateCodepageModule();
 
-	InitializeSourceControlMembers();
+	if (m_pSourceControl)
+		m_pSourceControl->InitializeSourceControlMembers();
+
 	g_bUnpackerMode = theApp.GetProfileInt(_T("Settings"), _T("UnpackerMode"), PLUGIN_MANUAL);
 	g_bPredifferMode = theApp.GetProfileInt(_T("Settings"), _T("PredifferMode"), PLUGIN_MANUAL);
 
@@ -505,11 +506,18 @@ BOOL CMergeApp::InitInstance()
 	return bContinue;
 }
 
+static void OpenContributersFile(int&)
+{
+	theApp.OpenFileToExternalEditor(paths_ConcatPath(env_GetProgPath(), ContributorsPath));
+}
+
 // App command to run the dialog
 void CMergeApp::OnAppAbout()
 {
 	CAboutDlg aboutDlg;
+	aboutDlg.m_onclick_contributers += Poco::delegate(OpenContributersFile);
 	aboutDlg.DoModal();
+	aboutDlg.m_onclick_contributers.clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -557,7 +565,7 @@ int CMergeApp::ExitInstance()
 	charsets_cleanup();
 
 	//  Save registry keys if existing WinMerge.reg
-	env_SaveRegistryToFile(env_GetProgPath() + _T("\\WinMerge.reg"), f_RegDir);
+	env_SaveRegistryToFile(paths_ConcatPath(env_GetProgPath(), _T("WinMerge.reg")), RegDir);
 
 	// Remove tempfolder
 	const String temp = env_GetTempPath();
@@ -829,7 +837,7 @@ void CMergeApp::OpenFileToExternalEditor(const String& file, int nLineNumber/* =
 {
 	String sCmd = GetOptionsMgr()->GetString(OPT_EXT_EDITOR_CMD);
 	String sFile(file);
-	string_replace(sCmd, _T("$linenum"), string_format(_T("%d"), nLineNumber));
+	string_replace(sCmd, _T("$linenum"), string_to_str(nLineNumber));
 
 	size_t nIndex = sCmd.find(_T("$file"));
 	if (nIndex != String::npos)
@@ -861,7 +869,8 @@ void CMergeApp::OpenFileToExternalEditor(const String& file, int nLineNumber/* =
 	if (!retVal)
 	{
 		// Error invoking external editor
-		ResMsgBox1(IDS_ERROR_EXECUTE_FILE, sCmd.c_str(), MB_ICONSTOP);
+		String msg = string_format_string1(_("Failed to execute external editor: %1"), sCmd);
+		AfxMessageBox(msg.c_str(), MB_ICONSTOP);
 	}
 	else
 	{
@@ -890,9 +899,9 @@ void CMergeApp::ShowHelp(LPCTSTR helpLocation /*= NULL*/)
 	String sPath = env_GetProgPath();
 	LANGID LangId = GetLangId();
 	if (PRIMARYLANGID(LangId) == LANG_JAPANESE)
-		sPath += DocsPath_ja;
+		sPath = paths_ConcatPath(sPath, DocsPath_ja);
 	else
-		sPath += DocsPath;
+		sPath = paths_ConcatPath(sPath, DocsPath);
 	if (helpLocation == NULL)
 	{
 		if (paths_DoesPathExist(sPath) == IS_EXISTING_FILE)
@@ -992,8 +1001,6 @@ BOOL CMergeApp::CreateBackup(BOOL bFolder, const String& pszPath)
 			< MAX_PATH)
 		{
 			success = TRUE;
-			if (!paths_EndsWithSlash(bakPath))
-				bakPath += _T("\\");
 			bakPath = paths_ConcatPath(bakPath, filename);
 			bakPath += _T(".");
 			bakPath += ext;
@@ -1004,9 +1011,10 @@ BOOL CMergeApp::CreateBackup(BOOL bFolder, const String& pszPath)
 		
 		if (!success)
 		{
-			if (ResMsgBox1(IDS_BACKUP_FAILED_PROMPT, pszPath.c_str(),
-					MB_YESNO | MB_ICONWARNING | MB_DONT_ASK_AGAIN, 
-					IDS_BACKUP_FAILED_PROMPT) != IDYES)
+			String msg = string_format_string1(
+				_("Unable to backup original file:\n%1\n\nContinue anyway?"),
+				pszPath);
+			if (AfxMessageBox(msg.c_str(), MB_YESNO | MB_ICONWARNING | MB_DONT_ASK_AGAIN) != IDYES)
 				return FALSE;
 		}
 		return TRUE;
@@ -1039,9 +1047,9 @@ int CMergeApp::SyncFileToVCS(const String& pszDest, BOOL &bApplyToAll,
 		return nRetVal;
 	
 	// If VC project opened from VSS sync and version control used
-	if ((nVerSys == VCS_VSS4 || nVerSys == VCS_VSS5) && m_bVCProjSync)
+	if ((nVerSys == SourceControl::VCS_VSS4 || nVerSys == SourceControl::VCS_VSS5) && m_pSourceControl->m_bVCProjSync)
 	{
-		if (!m_pVssHelper->ReLinkVCProj(strSavePath, sError))
+		if (!m_pSourceControl->m_vssHelper.ReLinkVCProj(strSavePath, sError))
 			nRetVal = -1;
 	}
 	return nRetVal;
@@ -1091,9 +1099,9 @@ int CMergeApp::HandleReadonlySave(String& strSavePath, BOOL bMultiFile,
 		// Version control system used?
 		// Checkout file from VCS and modify, don't ask about overwriting
 		// RO files etc.
-		if (nVerSys != VCS_NONE)
+		if (nVerSys != SourceControl::VCS_NONE)
 		{
-			BOOL bRetVal = SaveToVersionControl(strSavePath);
+			bool bRetVal = m_pSourceControl->SaveToVersionControl(strSavePath);
 			if (bRetVal)
 				return IDYES;
 			else
@@ -1109,7 +1117,7 @@ int CMergeApp::HandleReadonlySave(String& strSavePath, BOOL bMultiFile,
 			if (bMultiFile)
 			{
 				// Multiple files or folder
-				str = LangFormatString1(IDS_SAVEREADONLY_MULTI, strSavePath.c_str());
+				str = string_format_string1(_("%1\nis marked read-only. Would you like to override the read-only item?"), strSavePath);
 				userChoice = AfxMessageBox(str.c_str(), MB_YESNOCANCEL |
 						MB_ICONWARNING | MB_DEFBUTTON3 | MB_DONT_ASK_AGAIN |
 						MB_YES_TO_ALL, IDS_SAVEREADONLY_MULTI);
@@ -1117,7 +1125,7 @@ int CMergeApp::HandleReadonlySave(String& strSavePath, BOOL bMultiFile,
 			else
 			{
 				// Single file
-				str = LangFormatString1(IDS_SAVEREADONLY_FMT, strSavePath.c_str());
+				str = string_format_string1(_("%1 is marked read-only. Would you like to override the read-only file ? (No to save as new filename.)"), strSavePath);
 				userChoice = AfxMessageBox(str.c_str(), MB_YESNOCANCEL |
 						MB_ICONWARNING | MB_DEFBUTTON2 | MB_DONT_ASK_AGAIN,
 						IDS_SAVEREADONLY_FMT);
@@ -1140,7 +1148,7 @@ int CMergeApp::HandleReadonlySave(String& strSavePath, BOOL bMultiFile,
 		case IDNO:
 			if (!bMultiFile)
 			{
-				if (SelectFile(AfxGetMainWnd()->GetSafeHwnd(), s, strSavePath.c_str(), IDS_SAVE_AS_TITLE, NULL, FALSE))
+				if (SelectFile(AfxGetMainWnd()->GetSafeHwnd(), s, strSavePath.c_str(), _("Save As"), _T(""), FALSE))
 				{
 					strSavePath = s;
 					nRetVal = IDNO;
@@ -1218,9 +1226,9 @@ bool CMergeApp::LoadProjectFile(const String& sProject, ProjectFile &project)
 	}
 	catch (Poco::Exception& e)
 	{
-		String sErr = LoadString(IDS_UNK_ERROR_READING_PROJECT);
+		String sErr = _("Unknown error attempting to open project file");
 		sErr += ucr::toTString(e.displayText());
-		String msg = LangFormatString2(IDS_ERROR_FILEOPEN, sProject.c_str(), sErr.c_str());
+		String msg = string_format_string2(_("Cannot open file\n%1\n\n%2"), sProject, sErr);
 		AfxMessageBox(msg.c_str(), MB_ICONSTOP);
 		return false;
 	}
@@ -1236,9 +1244,9 @@ bool CMergeApp::SaveProjectFile(const String& sProject, const ProjectFile &proje
 	}
 	catch (Poco::Exception& e)
 	{
-		String sErr = LoadString(IDS_UNK_ERROR_SAVING_PROJECT);
+		String sErr = _("Unknown error attempting to save project file");
 		sErr += ucr::toTString(e.displayText());
-		String msg = LangFormatString2(IDS_ERROR_FILEOPEN, sProject.c_str(), sErr.c_str());
+		String msg = string_format_string2(_("Cannot open file\n%1\n\n%2"), sProject, sErr);
 		AfxMessageBox(msg.c_str(), MB_ICONSTOP);
 		return false;
 	}
@@ -1343,6 +1351,11 @@ String CMergeApp::LoadString(UINT id) const
 	return m_pLangDlg->LoadString(id);
 }
 
+bool CMergeApp::TranslateString(const std::string& str, String& translated_str) const
+{
+	return m_pLangDlg->TranslateString(str, translated_str);
+}
+
 /**
  * @brief Load dialog caption and translate to current WinMerge GUI language
  */
@@ -1365,9 +1378,7 @@ void CMergeApp::ReloadMenu()
  */
 String CMergeApp::GetDefaultEditor() const
 {
-	String path = env_GetWindowsDirectory();
-	path += _T("\\NOTEPAD.EXE");
-	return path;
+	return paths_ConcatPath(env_GetWindowsDirectory(), _T("NOTEPAD.EXE"));
 }
 
 /**

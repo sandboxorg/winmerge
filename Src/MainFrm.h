@@ -47,6 +47,7 @@ class SyntaxColors;
 class LineFiltersList;
 class TempFile;
 struct FileLocation;
+class SourceControl;
 
 typedef std::shared_ptr<TempFile> TempFilePtr;
 
@@ -138,6 +139,7 @@ public:
 // Implementation methods
 protected:
 	virtual ~CMainFrame();
+
 
 // Public implementation data
 public:
