@@ -17,6 +17,8 @@
 #include "OptionsFont.h"
 #include "DiffWrapper.h" // CMP_CONTENT
 #include "unicoder.h"
+#include "SourceControl.h"
+#include "Constants.h"
 
 // Functions to copy values set by installer from HKLM to HKCU.
 static void CopyHKLMValues();
@@ -160,8 +162,11 @@ void CMergeApp::OptionsInit()
 	else
 		m_pOptions->InitOption(OPT_CP_DETECT, (int)(50001 << 16) | 3);
 
-	m_pOptions->InitOption(OPT_VCS_SYSTEM, VCS_NONE);
+	m_pOptions->InitOption(OPT_VCS_SYSTEM, SourceControl::VCS_NONE);
 	m_pOptions->InitOption(OPT_VSS_PATH, _T(""));
+	m_pOptions->InitOption(OPT_VSS_DATABASE, _T(""));
+	m_pOptions->InitOption(OPT_VSS_PROJECT, _T(""));
+	m_pOptions->InitOption(OPT_VSS_USER, _T(""));
 
 	m_pOptions->InitOption(OPT_ARCHIVE_ENABLE, 1); // Enable by default
 	m_pOptions->InitOption(OPT_ARCHIVE_PROBETYPE, false);
@@ -214,9 +219,11 @@ static void CopyHKLMValues()
  */
 static bool OpenHKLM(HKEY *key, LPCTSTR relpath)
 {
-	TCHAR valuename[256] = _T("Software\\Thingamahoochie\\WinMerge\\");
+	TCHAR valuename[256];
 	if (relpath)
-		lstrcat(valuename, relpath);
+		wsprintf(valuename, _T("%s\\%s"), RegDir, relpath);
+	else
+		lstrcpy(valuename, RegDir);
 	LONG retval = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 			valuename, 0, KEY_READ, key);
 	if (retval == ERROR_SUCCESS)
@@ -235,9 +242,11 @@ static bool OpenHKLM(HKEY *key, LPCTSTR relpath)
  */
 static bool OpenHKCU(HKEY *key, LPCTSTR relpath)
 {
-	TCHAR valuename[256] = _T("Software\\Thingamahoochie\\WinMerge\\");
+	TCHAR valuename[256];
 	if (relpath)
-		lstrcat(valuename, relpath);
+		wsprintf(valuename, _T("%s\\%s"), RegDir, relpath);
+	else
+		lstrcpy(valuename, RegDir);
 	LONG retval = RegOpenKeyEx(HKEY_CURRENT_USER,
 			valuename, 0, KEY_ALL_ACCESS, key);
 	if (retval == ERROR_SUCCESS)
