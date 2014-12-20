@@ -45,4 +45,6 @@ void paths_SplitViewName(const TCHAR *s, String * path, String * name, String * 
 String paths_GetPathOnly(const String& fullpath);
 bool paths_IsURLorCLSID(const String& path);
 
+inline String paths_AddTrailingSlash(const String& path) { return !paths_EndsWithSlash(path) ? path + _T("\\") : path; }
+
 #endif // paths_h_included
