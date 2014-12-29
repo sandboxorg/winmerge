@@ -199,9 +199,6 @@
     <ClCompile Include="Common\ShellFileOperations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ssapi.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stringdiffs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -472,9 +469,6 @@
     <ClCompile Include="DiffViewBar.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirActions.cpp">
-      <Filter>MFCGui\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DirDoc.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
@@ -482,12 +476,6 @@
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DirView.cpp">
-      <Filter>MFCGui\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirViewColHandler.cpp">
-      <Filter>MFCGui\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirViewColItems.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EditorFilepathBar.cpp">
@@ -718,9 +706,6 @@
     <ClCompile Include="Common\SortHeaderCtrl.cpp">
       <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SourceControl.cpp">
-      <Filter>MFCGui\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Common\PreferencesDlg.cpp">
       <Filter>MFCGui\Dialogs</Filter>
     </ClCompile>
@@ -753,6 +738,18 @@
     </ClCompile>
     <ClCompile Include="LineFiltersList.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SourceControl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirViewColItems.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirActions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomStatusCursor.cpp">
+      <Filter>MFCGui\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1194,9 +1191,6 @@
     <ClInclude Include="DirView.h">
       <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DirViewColItems.h">
-      <Filter>MFCGui\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="EditorFilepathBar.h">
       <Filter>MFCGui\Header Files</Filter>
     </ClInclude>
@@ -1384,6 +1378,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Merge7zFormatRegister.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirViewColItems.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirActions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
