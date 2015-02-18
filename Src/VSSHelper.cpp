@@ -50,7 +50,7 @@ bool VSSHelper::SetProjectBase(const String& strPath)
 	if (m_strVssProjectBase[0] != '$' && m_strVssProjectBase[1] != '\\')
 		m_strVssProjectBase.insert(0, _T("$\\"));
 	
-	if (m_strVssProjectBase[m_strVssProjectBase.size() - 1] == '\\')
+	if (paths_EndsWithSlash(m_strVssProjectBase))
 		m_strVssProjectBase.resize(m_strVssProjectBase.size() - 1);
 	return true;
 }
@@ -102,7 +102,7 @@ bool VSSHelper::ReLinkVCProj(const String& strSavePath, String& sError)
 					_T("- failed to open file: %s"), strSavePath.c_str());
 				LogErrorString(sError);
 				String errMsg = GetSysError(GetLastError());
-				sError = LangFormatString2(IDS_ERROR_FILEOPEN, errMsg.c_str(), strSavePath.c_str());
+				sError = string_format_string2(_("Cannot open file\n%1\n\n%2"), errMsg, strSavePath);
 			}
 			if (tfile == INVALID_HANDLE_VALUE)
 			{
@@ -110,7 +110,7 @@ bool VSSHelper::ReLinkVCProj(const String& strSavePath, String& sError)
 					_T("- failed to open temporary file: %s"), tempFile.c_str());
 				LogErrorString(sError);
 				String errMsg = GetSysError(GetLastError());
-				sError = LangFormatString2(IDS_ERROR_FILEOPEN, errMsg.c_str(), tempFile.c_str());
+				sError = string_format_string2(_("Cannot open file\n%1\n\n%2"), errMsg, strSavePath);
 			}
 			return false;
 		}
@@ -163,7 +163,7 @@ bool VSSHelper::ReLinkVCProj(const String& strSavePath, String& sError)
 		else
 		{
 			String errMsg = GetSysError(GetLastError());
-			sError = LangFormatString2(IDS_ERROR_FILEOPEN, strSavePath.c_str(), errMsg.c_str());
+			sError = string_format_string2(_("Cannot open file\n%1\n\n%2"), errMsg, strSavePath);
 			return false;
 		}
 	}
@@ -192,7 +192,7 @@ void VSSHelper::GetFullVSSPath(const String& strSavePath, bool & bVCProj)
 
 	//take out last '\\'
 	int nLen = m_strVssProjectBase.size();
-	if (m_strVssProjectBase[nLen - 1] == '\\')
+	if (paths_EndsWithSlash(m_strVssProjectBase))
 		m_strVssProjectBase.resize(nLen - 1);
 
 	String strSearch = m_strVssProjectBase.c_str() + 2; // Don't compare first 2
@@ -206,8 +206,7 @@ void VSSHelper::GetFullVSSPath(const String& strSavePath, bool & bVCProj)
 	}
 
 	paths_SplitFilename(m_strVssProjectFull, &path, NULL, NULL);
-	if (m_strVssProjectBase[m_strVssProjectBase.size() - 1] != '\\')
-		m_strVssProjectBase += _T("\\");
+	m_strVssProjectBase = paths_AddTrailingSlash(m_strVssProjectBase);
 
 	m_strVssProjectFull += m_strVssProjectBase + path;
 
