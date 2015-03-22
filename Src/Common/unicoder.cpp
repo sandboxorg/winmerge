@@ -1160,7 +1160,7 @@ std::string toThreadCP(const std::wstring& str)
 bool CheckForInvalidUtf8(const char *pBuffer, size_t size)
 {
 	unsigned char * pVal2 = (unsigned char *)pBuffer;
-	for (int j = 0; j < size; ++j)
+	for (size_t j = 0; j < size; ++j)
 	{
 		if ((*pVal2 == 0xC0) || (*pVal2 == 0xC1) || (*pVal2 >= 0xF5))
 			return true;
@@ -1170,7 +1170,9 @@ bool CheckForInvalidUtf8(const char *pBuffer, size_t size)
 		return false;
 	pVal2 = (unsigned char *)pBuffer;
 	bool bUTF8 = false;
-	for (int i = 0; i < (size - 3); ++i)
+	if (size < 3)
+		return false;
+	for (size_t i = 0; i < (size - 3); ++i)
 	{
 		if ((*pVal2 & 0x80) == 0x00)
 			;

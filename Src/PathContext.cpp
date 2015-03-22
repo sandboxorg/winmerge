@@ -25,12 +25,7 @@ PathInfo::PathInfo(const PathInfo &pi)
 String PathInfo::GetPath(bool bNormalized /*= true*/) const
 { 
 	if (!bNormalized)
-	{
-		if (!paths_EndsWithSlash(m_sPath))
-			return m_sPath + _T("\\");
-		else
-			return m_sPath;
-	}
+		return paths_AddTrailingSlash(m_sPath);
 	else
 		return m_sPath;
 }
@@ -97,8 +92,8 @@ PathContext::PathContext(const PathContext &paths)
 
 PathContext::PathContext(const std::vector<String> &paths)
 {
-	m_nFiles = static_cast<int>(paths.size());
-	for (int i = 0; i < paths.size(); i++)
+	m_nFiles = paths.size();
+	for (size_t i = 0; i < paths.size(); i++)
 		m_path[i].SetPath(paths[i]);
 }
 
