@@ -344,7 +344,7 @@ HRESULT STDMETHODCALLTYPE DropHandler::DragLeave(void)
 HRESULT DropHandler::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
 {
 	bool ok = false;
-	WaitStatusCursor waitstatus(IDS_STATUS_COPYFILES);
+	WaitStatusCursor waitstatus(_T("Copying files..."));
 	std::vector<String> files;
 	FORMATETC fmtetc_cf_hdrop = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
 	FORMATETC fmtetc_shellidlist = { RegisterClipboardFormat(CFSTR_SHELLIDLIST), NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
