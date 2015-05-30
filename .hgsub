@@ -2,6 +2,7 @@ Externals/frhed = frhed
 Externals/freeimage = freeimage
 Externals/winimerge = winimerge
 Externals/sevenzip = sevenzip
+Externals/patch = patch
 
 [subpaths]
 (https://(?:[^@]+@)?bitbucket\.org/[^/]+)(/[^/]+)/(.*) = \1/\3
