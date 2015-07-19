@@ -181,6 +181,9 @@ extern const String OPT_FILEFILTER_SHARED OP("Settings/Filters/Shared");
 // Version control
 extern const String OPT_VCS_SYSTEM OP("Settings/VersionSystem");
 extern const String OPT_VSS_PATH OP("Settings/VssPath");
+extern const String OPT_VSS_DATABASE OP("Settings/VssDatabase");
+extern const String OPT_VSS_PROJECT OP("Settings/VssProject");
+extern const String OPT_VSS_USER OP("Settings/VssUser");
 
 // Archive support
 extern const String OPT_ARCHIVE_ENABLE OP("Merge7z/Enable");
