@@ -27,7 +27,7 @@ static String strProgPath;
 
 void env_SetTempPath(const String& path)
 {
-	strTempPath = paths_AddTrailingSlash(paths_GetLongPath(path));
+	strTempPath = paths_AddTrailingSlash(path);
 	paths_CreateIfNeeded(strTempPath);
 }
 
