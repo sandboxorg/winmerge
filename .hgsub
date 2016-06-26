@@ -1,0 +1,3 @@
+Externals/winimerge = [git]https://github.com/sdottaka/winimerge.git
+Externals/freeimage = [git]https://github.com/sdottaka/freeimage.git
+Externals/frhed = [git]https://github.com/sdottaka/frhed.git
