@@ -10,7 +10,6 @@
 #include <windows.h>
 #include <tchar.h>
 #include <cassert>
-#include <climits>
 #include <mbctype.h>
 #include "CompareOptions.h"
 #include "stringdiffsi.h"

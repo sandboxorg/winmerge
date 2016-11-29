@@ -7,12 +7,12 @@
 #include "paths.h"
 #include <windows.h>
 #include <cassert>
+#include <cstring>
 #include <direct.h>
 #include <mbctype.h> // MBCS (multibyte codepage stuff)
 #include <shlobj.h>
 #include <shlwapi.h>
 #include "PathContext.h"
-#include "unicoder.h"
 #include "coretools.h"
 
 static bool IsSlash(const String& pszStart, size_t nPos);
@@ -163,7 +163,7 @@ static bool GetDirName(const String& sDir, String& sName)
 		// because my first return value is not a dot directory, as I would have expected
 		WIN32_FIND_DATA ffd;
 		TCHAR sPath[8];
-		wsprintf(sPath, _T("%s\\*"), sDir.c_str());
+		StringCchPrintf(sPath, sizeof(sPath)/sizeof(sPath[0]), _T("%s\\*"), sDir.c_str());
 		HANDLE h = FindFirstFile(sPath, &ffd);
 		if (h == INVALID_HANDLE_VALUE)
 			return false;
@@ -244,7 +244,7 @@ String paths_GetLongPath(const String& szPath, bool bExpandEnvs)
 	// indicated by ^           ^                    ^
 	if (_tcslen(ptr) > 2)
 		end = _tcschr(fullPath+2, _T('\\'));
-	if (end && !_tcsnicmp(fullPath, _T("\\\\"),2))
+	if (end && !_tcsncmp(fullPath, _T("\\\\"),2))
 		end = _tcschr(end+1, _T('\\'));
 
 	if (!end)
@@ -331,7 +331,7 @@ bool paths_CreateIfNeeded(const String& szPath)
 	// indicated by ^           ^                    ^
 	if (_tcslen(ptr) > 2)
 		end = _tcschr(fullPath+2, _T('\\'));
-	if (end && !_tcsnicmp(fullPath, _T("\\\\"),2))
+	if (end && !_tcsncmp(fullPath, _T("\\\\"),2))
 		end = _tcschr(end+1, _T('\\'));
 
 	if (!end) return false;
@@ -760,4 +760,26 @@ bool paths_IsDecendant(const String& path, const String& ancestor)
 {
 	return path.length() > ancestor.length() && 
 		   string_compare_nocase(String(path.c_str(), path.c_str() + ancestor.length()), ancestor) == 0;
+}
+
+static void replace_char(TCHAR *s, int target, int repl)
+{
+	TCHAR *p;
+	for (p=s; *p != _T('\0'); p = _tcsinc(p))
+		if (*p == target)
+			*p = (TCHAR)repl;
+}
+
+String paths_ToWindowsPath(const String& path)
+{
+	String winpath = path;
+	replace_char(&*winpath.begin(), '/', '\\');
+	return winpath;
+}
+
+String paths_ToUnixPath(const String& path)
+{
+	String unixpath = path;
+	replace_char(&*unixpath.begin(), '\\', '/');
+	return unixpath;
 }

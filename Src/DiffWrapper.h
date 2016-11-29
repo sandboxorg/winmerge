@@ -27,7 +27,6 @@
 #include "diff.h"
 #include "FileLocation.h"
 #include "PathContext.h"
-#include "FileTextStats.h"
 #include "CompareOptions.h"
 #include "DiffList.h"
 #include "UnicodeString.h"

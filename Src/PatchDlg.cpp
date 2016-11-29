@@ -24,10 +24,8 @@
 #include "PatchDlg.h"
 #include "PatchTool.h"
 #include "diff.h"
-#include "coretools.h"
 #include "paths.h"
 #include "CompareOptions.h"
-#include "PatchHTML.h"
 #include "FileOrFolderSelect.h"
 #include "Environment.h"
 

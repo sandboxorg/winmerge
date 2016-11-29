@@ -8,7 +8,6 @@
 #include "PathContext.h"
 #include <cassert>
 #include "paths.h"
-#include "Environment.h"
 
 /**
  * @brief Copy constructor.

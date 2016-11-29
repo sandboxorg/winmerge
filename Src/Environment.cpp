@@ -8,7 +8,6 @@
 #include "Environment.h"
 #include <windows.h>
 #include <shlobj.h>
-#include <cassert>
 #include <sstream>
 #include <Poco/Path.h>
 #include <Poco/Process.h>
@@ -121,7 +120,7 @@ String env_GetMyDocuments()
 {
 	TCHAR path[MAX_PATH];
 	path[0] = _T('\0');
-	SHGetSpecialFolderPath(NULL, path, CSIDL_MYDOCUMENTS, FALSE);
+	SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, path);
 	return path;
 }
 
@@ -157,7 +156,7 @@ String env_GetSystemTempPath()
 
 static bool launchProgram(const String& sCmd, WORD wShowWindow)
 {
-	STARTUPINFO stInfo = { sizeof STARTUPINFO };
+	STARTUPINFO stInfo = { sizeof(STARTUPINFO) };
 	stInfo.dwFlags = STARTF_USESHOWWINDOW;
 	stInfo.wShowWindow = wShowWindow;
 	PROCESS_INFORMATION processInfo;
