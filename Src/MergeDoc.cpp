@@ -28,16 +28,13 @@
 #include "StdAfx.h"
 #include "MergeDoc.h"
 #include <cstdint>
-#include <shlwapi.h>		// PathCompactPathEx()
 #include <io.h>
 #include <Poco/Timestamp.h>
-#include <Poco/Exception.h>
 #include "UnicodeString.h"
 #include "Merge.h"
 #include "MainFrm.h"
 #include "DiffTextBuffer.h"
 #include "Environment.h"
-#include "DiffContext.h"	// FILE_SAME
 #include "MovedLines.h"
 #include "MergeEditView.h"
 #include "ChildFrm.h"
@@ -50,7 +47,6 @@
 #include "DiffFileInfo.h"
 #include "SaveClosingDlg.h"
 #include "DiffList.h"
-#include "codepage.h"
 #include "paths.h"
 #include "OptionsMgr.h"
 #include "OptionsDiffOptions.h"
@@ -73,7 +69,6 @@
 #endif
 
 using std::swap;
-using boost::int64_t;
 
 /** @brief Max len of path in caption. */
 static const UINT CAPTION_PATH_MAX = 50;

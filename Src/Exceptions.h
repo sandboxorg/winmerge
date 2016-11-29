@@ -27,14 +27,11 @@
 
 #ifdef _MSC_VER
 
-#include <cstdio>
 #include <windows.h>
 #include <tchar.h>
 #include <strsafe.h>
 
 #endif
-
-#include "UnicodeString.h"
 
 /**
  * @brief C exception "wrapper" class for C++ try/catch
@@ -92,9 +89,7 @@ public:
 	}
 	virtual bool GetErrorMessage( TCHAR *lpszError, unsigned nMaxError, unsigned *pnHelpContext = NULL )
 	{
-		static TCHAR message[512];
-		_sntprintf(message, sizeof(message)/sizeof(message[0]), _T("Exception %s (0x%.8x)"), getSeMessage(), static_cast<unsigned>(getSeNumber()));
-		StringCchCopy(lpszError, nMaxError, message);
+		StringCchPrintf(lpszError, nMaxError, _T("Exception %s (0x%.8x)"), getSeMessage(), static_cast<unsigned>(getSeNumber()));
 		return true;
 	}
 #else
