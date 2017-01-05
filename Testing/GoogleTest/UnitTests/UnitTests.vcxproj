@@ -178,7 +178,6 @@
     <ClCompile Include="..\..\..\Src\CompareEngines\ByteComparator.cpp" />
     <ClCompile Include="..\..\..\Src\CompareEngines\ByteCompare.cpp" />
     <ClCompile Include="..\..\..\Src\charsets.c" />
-    <ClCompile Include="..\..\..\Src\codepage.cpp" />
     <ClCompile Include="..\..\..\Src\codepage_detect.cpp" />
     <ClCompile Include="..\..\..\Src\CompareEngines\TimeSizeCompare.cpp" />
     <ClCompile Include="..\..\..\Src\CompareOptions.cpp" />
@@ -187,7 +186,6 @@
     <ClCompile Include="..\..\..\Src\DiffItem.cpp" />
     <ClCompile Include="..\..\..\Src\diffutils\src\Diff.cpp" />
     <ClCompile Include="..\..\..\Src\DirItem.cpp" />
-    <ClCompile Include="..\..\..\Src\Common\dllproxy.c" />
     <ClCompile Include="..\..\..\Src\Environment.cpp" />
     <ClCompile Include="..\..\..\Src\Common\ExConverter.cpp" />
     <ClCompile Include="..\..\..\Src\FileFilter.cpp" />
@@ -228,7 +226,6 @@
     <ClCompile Include="..\ByteCompare\ByteCompare_test.cpp" />
     <ClCompile Include="..\Encoding\charsets_test.cpp" />
     <ClCompile Include="..\Encoding\codepage_detect_test.cpp" />
-    <ClCompile Include="..\Encoding\codepage_test.cpp" />
     <ClCompile Include="..\DirItem\DirItem_test.cpp" />
     <ClCompile Include="..\Environment\Environemt_test.cpp" />
     <ClCompile Include="..\FileFilter\FileFilterHelper_test.cpp" />
@@ -260,7 +257,6 @@
     <ClInclude Include="..\..\..\Src\CompareEngines\ByteComparator.h" />
     <ClInclude Include="..\..\..\Src\CompareEngines\ByteCompare.h" />
     <ClInclude Include="..\..\..\Src\charsets.h" />
-    <ClInclude Include="..\..\..\Src\codepage.h" />
     <ClInclude Include="..\..\..\Src\codepage_detect.h" />
     <ClInclude Include="..\..\..\Src\CompareEngines\TimeSizeCompare.h" />
     <ClInclude Include="..\..\..\Src\CompareOptions.h" />
@@ -268,7 +264,6 @@
     <ClInclude Include="..\..\..\Src\CompareEngines\DiffUtils.h" />
     <ClInclude Include="..\..\..\Src\DiffItem.h" />
     <ClInclude Include="..\..\..\Src\DirItem.h" />
-    <ClInclude Include="..\..\..\Src\Common\dllproxy.h" />
     <ClInclude Include="..\..\..\Src\Environment.h" />
     <ClInclude Include="..\..\..\Src\Common\ExConverter.h" />
     <ClInclude Include="..\..\..\Src\FileFilter.h" />

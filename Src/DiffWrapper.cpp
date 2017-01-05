@@ -127,7 +127,7 @@ void CDiffWrapper::SetCreatePatchFile(const String &filename)
 	{
 		m_bCreatePatchFile = true;
 		m_sPatchFile = filename;
-		string_replace(m_sPatchFile, _T("/"), _T("\\"));
+		strutils::replace(m_sPatchFile, _T("/"), _T("\\"));
 	}
 }
 
@@ -709,10 +709,10 @@ bool CDiffWrapper::RunFileDiff()
 
 			// this can only fail if the data can not be saved back (no more
 			// place on disk ???) What to do then ??
-			if (!FileTransform_Prediffing(m_infoPrediffer.get(), strFileTemp[file], m_sToFindPrediffer, m_bPathsAreTemp))
+			if (!FileTransform::Prediffing(m_infoPrediffer.get(), strFileTemp[file], m_sToFindPrediffer, m_bPathsAreTemp))
 			{
 				// display a message box
-				String sError = string_format(
+				String sError = strutils::format(
 					_T("An error occurred while prediffing the file '%s' with the plugin '%s'. The prediffing is not applied any more."),
 					strFileTemp[file].c_str(),
 					m_infoPrediffer->pluginName.c_str());
@@ -889,7 +889,7 @@ bool CDiffWrapper::RunFileDiff()
 		// Delete temp files transformation functions possibly created
 		for (file = 0; file < files.GetSize(); file++)
 		{
-			if (string_compare_nocase(files[file], strFileTemp[file]) != 0)
+			if (strutils::compare_nocase(files[file], strFileTemp[file]) != 0)
 			{
 				try
 				{

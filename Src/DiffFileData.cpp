@@ -100,7 +100,7 @@ bool DiffFileData::DoOpenFiles()
 			return false;
 		}
 		
-		if (string_compare_nocase(m_FileLocation[0].filepath,
+		if (strutils::compare_nocase(m_FileLocation[0].filepath,
 				m_FileLocation[1].filepath) == 0)
 		{
 			m_inf[1].desc = m_inf[0].desc;
@@ -158,15 +158,15 @@ bool DiffFileData::Filepath_Transform(bool bForceUTF8,
 	// if a prediffer fails, we consider it is not the good one, that's all
 	// FileTransform_Prediffing returns FALSE only if the prediffer works, 
 	// but the data can not be saved to disk (no more place ??)
-	if (!FileTransform_Prediffing(infoPrediffer, filepathTransformed, filteredFilenames, bMayOverwrite))
+	if (!FileTransform::Prediffing(infoPrediffer, filepathTransformed, filteredFilenames, bMayOverwrite))
 		return false;
 
 	if ((encoding.m_unicoding && encoding.m_unicoding != ucr::UTF8) || bForceUTF8)
 	{
 		// fourth step : prepare for diffing
 		// may overwrite if we've already copied to temp file
-		bool bMayOverwrite = 0 != string_compare_nocase(filepathTransformed, filepath);
-		if (!FileTransform_AnyCodepageToUTF8(encoding.m_codepage, filepathTransformed, bMayOverwrite))
+		bool bMayOverwrite = 0 != strutils::compare_nocase(filepathTransformed, filepath);
+		if (!FileTransform::AnyCodepageToUTF8(encoding.m_codepage, filepathTransformed, bMayOverwrite))
 			return false;
 	}
 	return true;

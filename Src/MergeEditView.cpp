@@ -2492,7 +2492,7 @@ HMENU CMergeEditView::createScriptsSubmenu(HMENU hMenu)
 {
 	// get scripts list
 	std::vector<String> functionNamesList;
-	GetFreeFunctionsInScripts(functionNamesList, L"EDITOR_SCRIPT");
+	FileTransform::GetFreeFunctionsInScripts(functionNamesList, L"EDITOR_SCRIPT");
 
 	// empty the menu
 	int i = GetMenuItemCount(hMenu);
@@ -2514,7 +2514,7 @@ HMENU CMergeEditView::createScriptsSubmenu(HMENU hMenu)
 		functionNamesList.clear();
 	}
 
-	if (!IsWindowsScriptThere())
+	if (!plugin::IsWindowsScriptThere())
 		AppendMenu(hMenu, MF_STRING, ID_NO_SCT_SCRIPTS, _("WSH not found - .sct scripts disabled").c_str());
 
 	return hMenu;
@@ -2834,7 +2834,7 @@ void CMergeEditView::OnWMGoto()
 	nLastLine = pDoc->m_ptBuf[m_nThisPane]->ComputeRealLine(nLineCount - 1);
 
 	// Set active file and current line selected in dialog
-	dlg.m_strParam = string_to_str(nRealLine + 1);
+	dlg.m_strParam = strutils::to_str(nRealLine + 1);
 	dlg.m_nFile = (pDoc->m_nBuffers < 3) ? (m_nThisPane == 1 ? 2 : 0) : m_nThisPane;
 	dlg.m_nGotoWhat = 0;
 
@@ -2922,7 +2922,7 @@ void CMergeEditView::OnScripts(UINT nID )
 	String text = GetSelectedText();
 
 	// transform the text with a script/ActiveX function, event=EDITOR_SCRIPT
-	bool bChanged = TextTransform_Interactive(text, L"EDITOR_SCRIPT", nID - ID_SCRIPT_FIRST);
+	bool bChanged = FileTransform::Interactive(text, L"EDITOR_SCRIPT", nID - ID_SCRIPT_FIRST);
 	if (bChanged)
 		// now replace the text
 		ReplaceSelection(text.c_str(), static_cast<int>(text.length()), 0);
@@ -3232,7 +3232,7 @@ void CMergeEditView::OnEditCopyLineNumbers()
 
 	// Get last selected line (having widest linenumber)
 	int line = pDoc->m_ptBuf[m_nThisPane]->ComputeRealLine(ptEnd.y);
-	size_t nNumWidth = string_to_str(line + 1).length();
+	size_t nNumWidth = strutils::to_str(line + 1).length();
 	
 	for (int i = ptStart.y; i <= ptEnd.y; i++)
 	{
@@ -3244,7 +3244,7 @@ void CMergeEditView::OnEditCopyLineNumbers()
 
 		// Insert spaces to align different width linenumbers (99, 100)
 		strLine = GetLineText(i);
-		CString sSpaces(' ', static_cast<int>(nNumWidth - string_to_str(line + 1).length()));
+		CString sSpaces(' ', static_cast<int>(nNumWidth - strutils::to_str(line + 1).length()));
 		
 		strText += sSpaces;
 		strNumLine.Format(_T("%d: %s"), line + 1, strLine);
