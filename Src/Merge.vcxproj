@@ -389,9 +389,6 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Common\CMoveConstraint.cpp" />
-    <ClCompile Include="codepage.cpp">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="codepage_detect.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -482,9 +479,6 @@
     </ClCompile>
     <ClCompile Include="DirView.cpp" />
     <ClCompile Include="DirViewColItems.cpp">
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Common\dllproxy.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="dllpstub.cpp">
@@ -780,7 +774,6 @@
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="Common\ClipBoard.h" />
     <ClInclude Include="Common\CMoveConstraint.h" />
-    <ClInclude Include="codepage.h" />
     <ClInclude Include="codepage_detect.h" />
     <ClInclude Include="Common\ColorButton.h" />
     <ClInclude Include="Common\ExConverter.h" />
@@ -827,7 +820,6 @@
     <ClInclude Include="DirTravel.h" />
     <ClInclude Include="DirView.h" />
     <ClInclude Include="DirViewColItems.h" />
-    <ClInclude Include="Common\dllproxy.h" />
     <ClInclude Include="dllpstub.h" />
     <ClInclude Include="EditorFilepathBar.h" />
     <ClInclude Include="EncodingErrorBar.h" />

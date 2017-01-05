@@ -52,9 +52,6 @@
     <ClCompile Include="charsets.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="codepage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="codepage_detect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -107,9 +104,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DirTravel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Common\dllproxy.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dllpstub.cpp">
@@ -756,9 +750,6 @@
     <ClInclude Include="charsets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="codepage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="codepage_detect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -814,9 +805,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DirTravel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\dllproxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dllpstub.h">
